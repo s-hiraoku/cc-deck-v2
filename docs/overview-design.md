@@ -78,6 +78,7 @@ CC-Deck v2 (Claude Code Development Platform v2)
 - **POML 担当**: AI エージェント定義、動的ワークフロー、コンテキスト管理
 - **YAML 担当**: インフラ設定、CI/CD 統合、品質ゲート
 - **統合点**: Orchestrator.poml が YAML 設定を参照
+- **コンテキスト継承**: State-Driven Context Persistence による workflow 間の情報継承
 
 #### 2.2.3 Multi-Language Implementation Engine
 
@@ -201,6 +202,7 @@ Approval: ステークホルダーサインオフ必須
 - [ ] POML + YAML hybrid workflow engine
 - [ ] CES specification system
 - [ ] Basic project/feature management
+- [ ] State-Driven Context Persistence system
 - [ ] TypeScript/JavaScript support
 
 ### Phase 2: Multi-Language Support

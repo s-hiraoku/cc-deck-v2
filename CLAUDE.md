@@ -51,6 +51,7 @@ CC-Deck v2 is a next-generation AI-driven development platform that simplifies a
 6. **Agent Specialization**: Use focused, domain-specific sub-agents for precise tasks
 7. **Context-Aware Orchestration**: Dynamic agent selection based on project context
 8. **Extensible Architecture**: Modular design supporting plugins and custom workflows
+9. **State-Driven Context Persistence**: Ensure seamless context flow between workflow phases
 
 ## Architecture Overview
 
@@ -97,6 +98,7 @@ Building on Kiro's specification-driven development while leveraging Claude Code
 - **Smart Context Propagation**: Maintain design consistency across multiple specifications
 - **MCP-Enhanced Research**: Real-time documentation access during specification creation
 - **Progressive Specification**: Iterative refinement with AI assistance
+- **State-Driven Context Management**: POML-based context persistence across workflow transitions
 
 ## Project Structure
 
@@ -113,21 +115,25 @@ cc-deck-v2/
 │       │       ├── tasks.md         # Implementation tasks with TDD patterns
 │       │       ├── context.md       # Feature-specific context and constraints
 │       │       ├── steering.md      # Adaptive steering for this specification
-│       │       └── workflow.poml    # POML-based AI workflow definitions
+│       │       ├── workflow.poml    # POML-based AI workflow definitions
+│       │       └── context-state.json # Workflow context persistence state
 │       └── src/             # Implementation files
 ├── workflows/               # POML + YAML hybrid workflow system
 │   ├── agents/              # POML-based agent definitions
 │   │   ├── spec-generator.poml      # CES specification agent
 │   │   ├── implementation.poml       # Implementation agent
 │   │   ├── validation.poml          # Testing and validation agent
+│   │   ├── context-bridge.poml      # Workflow context bridging agent
 │   │   └── orchestrator.poml        # Main workflow orchestration
 │   ├── templates/           # Dynamic POML workflow templates
 │   │   ├── spec-workflow.poml       # Specification generation workflow
 │   │   ├── impl-workflow.poml       # Implementation workflow
-│   │   └── valid-workflow.poml      # Validation workflow
+│   │   ├── valid-workflow.poml      # Validation workflow
+│   │   └── context-bridge.poml      # Context transition templates
 │   └── config/              # YAML-based infrastructure configs
 │       ├── project-defaults.yaml    # Default project settings
-│       └── quality-gates.yaml       # Quality assurance requirements
+│       ├── quality-gates.yaml       # Quality assurance requirements
+│       └── context-config.yaml      # Context persistence configuration
 ├── steering/                # Global steering files
 │   ├── coding-standards.md  # Project-wide coding conventions
 │   ├── architecture.md      # System architecture patterns
@@ -583,6 +589,32 @@ NEVER proactively create documentation files (*.md) or README files. Only create
 - **Migration Path**: Gradual adoption without breaking existing workflows
 - **Performance Optimization**: AI-optimized configuration where it matters most
 
+### State-Driven Context Persistence Architecture
+
+#### Core Context Management System
+- **Context State Files**: Each feature maintains `context-state.json` for workflow persistence
+- **POML Context Bridging**: Automated context transfer between workflow phases
+- **Enhanced CLAUDE.md Integration**: Dynamic context injection into session memory
+- **Progressive Context Building**: Cumulative context enhancement across iterations
+
+#### Context Storage Mechanism
+```
+projects/{project-name}/specs/{feature-name}/
+├── context-state.json          # Current workflow context state
+├── context-history.jsonl       # Historical context evolution
+└── context-cache/              # Cached context artifacts
+    ├── previous-decisions.json  # Key decisions from previous phases
+    ├── technical-constraints.json # Technical limitations and requirements
+    └── quality-metrics.json    # Quality measurements and benchmarks
+```
+
+#### Context Bridging Process
+1. **Context Extraction**: Mine completed workflow for key information
+2. **Context Storage**: Persist extracted context in structured format
+3. **Context Injection**: Load relevant context at workflow start
+4. **Context Enhancement**: Enrich context throughout workflow execution
+5. **Context Validation**: Ensure context quality and consistency
+
 ### Workflow Control Requirements
 When discussing workflow control:
 1. **Define storage mechanism**: POML files in `workflows/agents/` and `workflows/templates/`
@@ -590,4 +622,5 @@ When discussing workflow control:
 3. **Show state management**: JSON-based progress tracking with POML workflow state
 4. **Provide transition rules**: POML conditional blocks and loop structures for flow control
 5. **Include concrete examples**: Actual POML agent definitions and workflow templates
+6. **Context persistence strategy**: State-driven context bridging across workflow phases
 

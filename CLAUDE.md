@@ -102,23 +102,32 @@ Building on Kiro's specification-driven development while leveraging Claude Code
 
 ```
 cc-deck-v2/
-├── specs/                    # Claude Code Enhanced Specifications
-│   └── {project-name}/       # Project-specific specifications
+├── projects/                # Project workspaces
+│   └── {project-name}/      # Individual project directory
 │       ├── project.json     # Project metadata and configuration
-│       └── features/        # Feature specifications within project
-│           └── {feature-name}/
-│               ├── spec.json        # State management (phase, approvals, progress)
-│               ├── requirements.md   # EARS+ requirements with context linkage
-│               ├── design.md        # AI-assisted technical design
-│               ├── tasks.md         # Implementation tasks with TDD patterns
-│               ├── context.md       # Feature-specific context and constraints
-│               └── steering.md      # Adaptive steering for this specification
-├── projects/                # Generated implementations
-│   └── {project-name}/      # Individual project workspaces
-├── workflows/               # Claude Code workflow automation
-│   ├── spec.yaml           # CES-enhanced specification workflow
-│   ├── impl.yaml           # Implementation workflow with agentic search
-│   └── valid.yaml          # Validation workflow with deep analysis
+│       ├── specs/           # Claude Code Enhanced Specifications
+│       │   └── {feature-name}/
+│       │       ├── spec.json        # State management (phase, approvals, progress)
+│       │       ├── requirements.md   # EARS+ requirements with context linkage
+│       │       ├── design.md        # AI-assisted technical design
+│       │       ├── tasks.md         # Implementation tasks with TDD patterns
+│       │       ├── context.md       # Feature-specific context and constraints
+│       │       ├── steering.md      # Adaptive steering for this specification
+│       │       └── workflow.poml    # POML-based AI workflow definitions
+│       └── src/             # Implementation files
+├── workflows/               # POML + YAML hybrid workflow system
+│   ├── agents/              # POML-based agent definitions
+│   │   ├── spec-generator.poml      # CES specification agent
+│   │   ├── implementation.poml       # Implementation agent
+│   │   ├── validation.poml          # Testing and validation agent
+│   │   └── orchestrator.poml        # Main workflow orchestration
+│   ├── templates/           # Dynamic POML workflow templates
+│   │   ├── spec-workflow.poml       # Specification generation workflow
+│   │   ├── impl-workflow.poml       # Implementation workflow
+│   │   └── valid-workflow.poml      # Validation workflow
+│   └── config/              # YAML-based infrastructure configs
+│       ├── project-defaults.yaml    # Default project settings
+│       └── quality-gates.yaml       # Quality assurance requirements
 ├── steering/                # Global steering files
 │   ├── coding-standards.md  # Project-wide coding conventions
 │   ├── architecture.md      # System architecture patterns
@@ -240,15 +249,23 @@ Leveraging existing patterns from #[[file:components/ui/button.tsx]]...
 
 #### Command Usage Examples
 ```bash
-# Example commands
-/ces-project-init example-project
-/ces-spec-init example-project example-feature
-/ces-spec-requirements example-project example-feature
-/ces-approve-requirements example-project example-feature
+# Project setup
+/project-init example-project
 
-# Multiple feature example
-/ces-spec-init example-project another-feature
-/ces-spec-design example-project another-feature
+# Specification workflow (CES)
+/spec-init example-project example-feature
+/spec-requirements example-project example-feature
+/spec-design example-project example-feature
+/spec-tasks example-project example-feature
+
+# Approval workflow
+/approve-requirements example-project example-feature
+/approve-design example-project example-feature
+
+# Implementation workflow
+/implement example-project example-feature
+/test example-project example-feature
+/create-pr example-project example-feature
 ```
 
 ## Development Commands
@@ -270,48 +287,54 @@ Leveraging existing patterns from #[[file:components/ui/button.tsx]]...
 #### Project Management Commands
 ```bash
 # Initialize new project with default structure
-/ces-project-init [project-name]
+/project-init [project-name]
 
 # List all projects and their status
-/ces-project-list
+/project-list
 
 # Switch active project context
-/ces-project-switch [project-name]
+/project-switch [project-name]
 ```
 
-#### Enhanced Specification Commands
+#### Specification Commands (CES - Claude Code Enhanced Specification System)
 ```bash
 # Initialize specification with Claude Code context awareness
-/ces-spec-init [project-name] [feature-name]
+/spec-init [project-name] [feature-name]
 
 # Generate EARS+ requirements with live file references
-/ces-spec-requirements [project-name] [feature-name]
+/spec-requirements [project-name] [feature-name]
 
 # Create AI-enhanced technical design
-/ces-spec-design [project-name] [feature-name]
+/spec-design [project-name] [feature-name]
 
-# Generate TDD-focused implementation tasks
-/ces-spec-tasks [project-name] [feature-name]
+# Generate implementation tasks
+/spec-tasks [project-name] [feature-name]
 
-# Check progress with deep codebase analysis
-/ces-spec-status [project-name] [feature-name]
-
-# Execute specification with agentic search
-/ces-spec-execute [project-name] [feature-name]
+# Check specification progress
+/spec-status [project-name] [feature-name]
 ```
 
-#### State Management Commands
+#### Approval Management Commands
 ```bash
 # Approve specification phase progression
-/ces-approve-requirements [project-name] [feature-name]
-/ces-approve-design [project-name] [feature-name]
-/ces-approve-tasks [project-name] [feature-name]
+/approve-requirements [project-name] [feature-name]
+/approve-design [project-name] [feature-name]
+/approve-tasks [project-name] [feature-name]
+```
 
-# Track progress across all specifications
-/ces-dashboard [project-name]
+#### Implementation & Workflow Commands
+```bash
+# Execute implementation workflow
+/implement [project-name] [feature-name]
 
-# Validate specification compliance
-/ces-validate [project-name] [feature-name]
+# Run testing workflow
+/test [project-name] [feature-name]
+
+# Create pull request
+/create-pr [project-name] [feature-name]
+
+# Platform dashboard
+/dashboard [project-name]
 ```
 
 ### Quality Assurance
@@ -428,10 +451,11 @@ The platform leverages Model Context Protocol (MCP) servers for enhanced develop
 
 ## Platform Extension
 
-### Custom Workflows
-- YAML-based workflow definitions
-- Plugin system for additional tools
-- Template-based project scaffolding
+### Hybrid Workflow System (POML + YAML)
+- **POML for AI-Native Workflows**: Agent definitions, dynamic templates, context-aware orchestration
+- **YAML for Infrastructure**: CI/CD configs, dependency management, quality gates
+- **Plugin system for additional tools**: Extensible architecture supporting custom agents and tools
+- **Template-based project scaffolding**: Language-agnostic project generation
 
 ### Integration Points
 - Git hooks for automated quality checks
@@ -513,22 +537,57 @@ NEVER create files unless they're absolutely necessary for achieving your goal.
 ALWAYS prefer editing an existing file to creating a new one.
 NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User.
 
+## Session Initialization Requirements
+- **ALWAYS get current date/time first**: Use date-utility agent or Task tool to get current date and time at session start
+- **Context awareness**: Understanding current date is essential for AI/tech landscape research and time-sensitive recommendations
+
 ## Critical Response Requirements
+- **ALWAYS be honest**: Provide genuine assessments, admit uncertainties, and avoid forced recommendations when evidence doesn't support them
 - **ALWAYS provide concrete implementations**: When suggesting alternatives or improvements, provide specific, actionable solutions with code examples or detailed mechanisms
 - **NEVER suggest removing systems without replacements**: If proposing to remove YAML, databases, or any system, MUST provide exact alternative with implementation details
 - **ALWAYS research before answering**: Use WebSearch AND MCP tools (Context7, DeepWiki, Brave Search) for comprehensive, current information
 - **AVOID vague proposals**: Terms like "dynamic", "intelligent", "adaptive" without concrete implementation are meaningless
 - **Use multiple information sources**: Combine WebSearch + Context7 (library docs) + DeepWiki (repo analysis) + Brave Search + GitHub MCP for comprehensive answers
+- **Keep it simple and quality-focused**: Avoid temporary workarounds, example lists, or documentation bloat. Focus on essential, high-quality content only
 
 ## System Naming Accuracy
 - **CC-Deck v2**: Complete development platform (NOT just specification system)
 - Handles: Specification → Implementation → Testing → Deployment
-- CES is one component, not the entire system
+- **CES**: Claude Code Enhanced Specification System - ONE component for specification creation only
+- **Incorrect naming**: Do NOT use "CES" for commands that handle implementation, testing, or deployment
 
-## Workflow Control Requirements
+## Multi-Language Platform Support
+- **CC-Deck v2 is language-agnostic**: Supports projects in any programming language
+- **Common languages**: TypeScript, JavaScript, Python, Go, Rust, Java, C#, PHP, Ruby, etc.
+- **When researching solutions**: Always consider multi-language compatibility, not just TypeScript
+- **Workflow solutions must be universal**: Should work regardless of the project's implementation language
+
+## POML Integration Strategy
+
+### Why POML Over YAML for AI Workflows
+- **AI-Native Design**: Built specifically for LLM prompt orchestration and agent management
+- **Semantic Structure**: HTML-like syntax provides clear intent and context for AI operations
+- **Dynamic Templating**: Native support for variables, loops, conditionals without external templating engines
+- **Rich Context Integration**: Better support for embedding project data, file references, and external sources
+- **Microsoft Backing**: Official Microsoft specification with active development and tooling support
+
+### POML Implementation Plan
+1. **Agent Definitions**: Use POML for defining sub-agent behaviors, prompts, and capabilities
+2. **Dynamic Workflows**: Template-based workflow generation that adapts to project context
+3. **Context Management**: Rich integration with MCP tools and project file references
+4. **Orchestration Logic**: Complex conditional flows and data transformations in AI-readable format
+
+### Hybrid Architecture Benefits
+- **Best of Both Worlds**: POML for AI complexity, YAML for infrastructure simplicity
+- **Tool Compatibility**: Maintain CI/CD and external tool integration through YAML
+- **Migration Path**: Gradual adoption without breaking existing workflows
+- **Performance Optimization**: AI-optimized configuration where it matters most
+
+### Workflow Control Requirements
 When discussing workflow control:
-1. **Define storage mechanism**: Where are workflow definitions stored?
-2. **Specify execution engine**: What reads and executes the workflow?
-3. **Show state management**: How is progress tracked?
-4. **Provide transition rules**: How are conditions and branches handled?
-5. **Include concrete examples**: Show actual code/configuration, not concepts
+1. **Define storage mechanism**: POML files in `workflows/agents/` and `workflows/templates/`
+2. **Specify execution engine**: Claude Code with POML SDK integration for parsing and execution
+3. **Show state management**: JSON-based progress tracking with POML workflow state
+4. **Provide transition rules**: POML conditional blocks and loop structures for flow control
+5. **Include concrete examples**: Actual POML agent definitions and workflow templates
+

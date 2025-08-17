@@ -589,6 +589,65 @@ NEVER proactively create documentation files (*.md) or README files. Only create
 - **Migration Path**: Gradual adoption without breaking existing workflows
 - **Performance Optimization**: AI-optimized configuration where it matters most
 
+### POML Implementation Compliance
+
+**ALL POML implementations MUST strictly adhere to Microsoft's official POML specification:**
+
+#### Required POML Documentation References
+- **Official POML Repository**: https://github.com/microsoft/poml
+- **POML Documentation**: https://microsoft.github.io/poml/latest/
+- **VS Code Extension**: https://marketplace.visualstudio.com/items?itemName=poml-team.poml
+
+#### POML Specification Requirements
+1. **HTML-like Syntax** - Use proper semantic components with correct tag structure
+2. **Semantic Components** - Use official tags: `<role>`, `<task>`, `<example>`, `<output-format>`
+3. **Data Components** - Use official data tags: `<document>`, `<table>`, `<img>`
+4. **Root Element** - All POML files must start with `<poml>` root element
+5. **Templating Engine** - Use POML's built-in templating for variables and conditionals
+6. **No Custom Tags** - Only use officially defined POML semantic and data components
+
+#### POML Structure Template
+```xml
+<poml>
+  <!-- Variable definitions -->
+  <let name="project_name" value="{{PROJECT_NAME}}" />
+  <let name="feature_name" value="{{FEATURE_NAME}}" />
+  
+  <!-- Role definition -->
+  <role>Define the AI agent's persona and context</role>
+  
+  <!-- Task specification -->
+  <task>Specify the primary objective and requirements</task>
+  
+  <!-- Conditional content -->
+  <p if="iteration > 1">Previous iteration context available</p>
+  
+  <!-- Data components for external resources -->
+  <document src="path/to/file.md" />
+  <img src="diagram.png" alt="Architecture diagram" />
+  
+  <!-- Loop for multiple examples -->
+  <example for="ex in examples">
+    Input: {{ex.input}}
+    Output: {{ex.output}}
+  </example>
+  
+  <!-- Output format specification -->
+  <output-format>
+    Specify exact output format and constraints
+  </output-format>
+</poml>
+```
+
+#### Validation Requirements
+- [ ] All POML files validate against official specification
+- [ ] Use only officially supported semantic and data components
+- [ ] Proper HTML-like syntax with correct tag nesting
+- [ ] Templating follows POML engine capabilities
+- [ ] No deviation from Microsoft's POML standard
+
+**Any deviation from official POML specification will cause incompatibility issues and must be avoided.**
+
 ### State-Driven Context Persistence Architecture
 
 #### Core Context Management System

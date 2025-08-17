@@ -2,7 +2,17 @@
 
 ## Overview
 
-CC-Deck v2 implements a sophisticated yet practical context persistence system that ensures seamless information flow between workflow phases. This architecture leverages POML's AI-native capabilities combined with enhanced CLAUDE.md integration to maintain high-quality context across all development workflows.
+CC-Deck v2 implements a sophisticated yet practical context persistence system that ensures seamless information flow between workflow phases. As a specialized development platform focused on **specification, implementation, and evaluation**, CC-Deck v2 leverages POML's AI-native capabilities combined with enhanced CLAUDE.md integration to maintain high-quality context across all development workflows.
+
+### Platform Context Foundation
+
+This context persistence architecture supports CC-Deck v2's core mission of providing high-quality documents, code, and test environments through:
+
+- **Specification Context**: Maintaining requirements, design decisions, and constraints across workflow phases
+- **Implementation Context**: Preserving code patterns, architectural decisions, and technical debt information
+- **Evaluation Context**: Tracking test results, performance metrics, and quality assessments
+- **Custom Slash Command Integration**: Context-aware command execution with historical awareness
+- **Sub-Agent Coordination**: Seamless context handoff between specialized AI agents
 
 ## Core Architecture Components
 

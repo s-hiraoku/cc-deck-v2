@@ -8,13 +8,18 @@ CC-Deck v2 (Claude Code Development Platform v2)
 
 ### 1.2 目的
 
-次世代 AI 駆動開発プラットフォームとして、「数時間の作業を 1 つのコマンドに変換」することで、ソフトウェア開発プロセスを根本的に簡素化・自動化する。
+**仕様、実装、評価に特化した AI 駆動開発プラットフォーム**として、カスタムスラッシュコマンドとサブエージェントを効果的に活用し、高品質なドキュメント、コード、テスト環境を提供することで、AI による開発基盤を確立する。
+
+**従来の cc-deck との違い**: CC-Deck v2 は新規作成・継続開発の両方において、「数時間の作業を 1 つのコマンドに変換」することで、開発プロセスを根本的に簡素化・自動化する。
 
 ### 1.3 設計思想
 
-- **Simplicity First**: 複雑性を排除しつつ機能性を保持
-- **AI-Native Development**: Claude Code の能力を最大限活用
-- **Specification-Driven**: 明確な仕様が実装を主導
+- **Specification Excellence**: AI 支援による高品質な仕様書・設計書・技術文書の生成
+- **Implementation Quality**: 95%+ カバレッジを目標とした堅牢なコード実装
+- **Comprehensive Evaluation**: ユニット・統合・E2E・パフォーマンステストの完全自動化
+- **Custom Slash Commands**: 複雑なワークフローを簡潔なコマンドに変換
+- **Specialized Sub-Agents**: ドメイン特化 AI エージェントによる高度作業の自動化
+- **AI-Native Development**: Claude Code の能力を最大限活用した開発ワークフロー
 - **Human-Centric Approval**: 重要な決定には人間の承認が必要
 - **Multi-Language Support**: 言語に依存しない汎用プラットフォーム
 

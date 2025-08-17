@@ -4,11 +4,22 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-CC-Deck v2 is a next-generation AI-driven development platform that simplifies and streamlines the software development process. Built as a refined evolution of the original cc-deck concept, it focuses on essential workflows while maintaining enterprise-grade quality standards.
+CC-Deck v2 is a specialized development platform focused on **specification, implementation, and evaluation**. Unlike traditional cc-deck, CC-Deck v2 is designed as an AI-native development platform that provides a foundation for AI-driven development through effective use of custom slash commands and sub-agents.
+
+**Platform Mission**: Provide high-quality documents, code, and test environments for both new project creation and continuous development through AI-powered automation.
 
 **Built for**: Claude Opus 4.1 embedded in terminal environment  
 **Core Capability**: Transform "hours-long workflows into a single command"  
 **Architecture**: Leverages deep codebase awareness and agentic search
+
+### Core Platform Principles
+
+1. **Specification Excellence**: AI-assisted generation of high-quality specification documents, design documents, and technical documentation
+2. **Implementation Quality**: Test-driven development with 95%+ coverage targeting robust code implementation  
+3. **Comprehensive Evaluation**: Automated unit, integration, E2E, and performance testing environments
+4. **Custom Slash Commands**: Simplify complex workflows into concise, executable commands
+5. **Specialized Sub-Agents**: Domain-specific AI agents that automate sophisticated development tasks
+6. **Quality-First Approach**: Automated quality gates and approval flows at each development stage
 
 ## ⚠️ CRITICAL: Anthropic Specification Compliance
 

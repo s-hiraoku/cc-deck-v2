@@ -32,29 +32,16 @@
   </task>
 
   <command-routing>
-    <p if="command == 'spec-init'">
-      Route to spec-generator sub-agent for specification creation.
-      Focus on EARS+ requirements and CES methodology.
+    <p if="command == 'review'">
+      Route to code-reviewer sub-agent for code analysis.
     </p>
     
     <p if="command == 'implement'">
-      Route to implementation sub-agent for TDD-driven development.
-      Ensure 95%+ test coverage and quality gates compliance.
+      Route to implementation sub-agent for development.
     </p>
     
-    <p if="command == 'review'">
-      Route to code-reviewer sub-agent for code quality analysis.
-      Apply security, performance, and maintainability checks.
-    </p>
-    
-    <p if="command == 'test'">
-      Route to test-runner sub-agent for comprehensive testing.
-      Execute unit, integration, and E2E test suites.
-    </p>
-    
-    <p if="command == 'validate'">
-      Route to validator sub-agent for quality assurance.
-      Verify compliance with project standards and requirements.
+    <p if="command == 'spec'">
+      Route to spec-generator sub-agent for specification.
     </p>
   </command-routing>
 

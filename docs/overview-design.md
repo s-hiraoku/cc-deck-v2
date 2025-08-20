@@ -115,19 +115,14 @@ projects/{project-name}/
 ### 3.2 ワークフロー構造
 
 ```
-workflows/
-├── agents/                   # POML エージェント定義
-│   ├── spec-generator.poml   # CES仕様生成
-│   ├── implementation.poml   # 実装エージェント
-│   ├── validation.poml       # テスト・検証
-│   └── orchestrator.poml     # メインオーケストレーション
-├── templates/                # 動的POMLテンプレート
-│   ├── spec-workflow.poml    # 仕様生成ワークフロー
-│   ├── impl-workflow.poml    # 実装ワークフロー
-│   └── valid-workflow.poml   # 検証ワークフロー
-└── config/                   # YAML インフラ設定
-    ├── project-defaults.yaml # デフォルトプロジェクト設定
-    └── quality-gates.yaml    # 品質保証要件
+poml/
+├── commands/                 # スラッシュコマンド用POMLテンプレート
+│   └── orchestrator.poml     # 統一コマンドオーケストレーター
+└── agents/                   # エージェント挙動制御用POMLテンプレート
+    ├── spec-generator.poml   # CES仕様生成挙動
+    ├── implementation.poml   # 実装エージェント挙動
+    ├── validation.poml       # テスト・検証挙動
+    └── security-review.poml  # セキュリティレビュー挙動
 ```
 
 ## 4. 主要ワークフロー

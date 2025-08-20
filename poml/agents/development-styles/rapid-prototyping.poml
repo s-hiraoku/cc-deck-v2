@@ -1,0 +1,91 @@
+<poml>
+  <metadata>
+    <template-name>rapid-prototyping</template-name>
+    <version>1.0.0</version>
+    <description>High-speed prototyping behavior for rapid iteration and validation</description>
+    <compatible-agents>implementation, spec-generator</compatible-agents>
+  </metadata>
+
+  <behavior-modification>
+    <priorities>
+      - Speed of implementation over code perfection
+      - Quick feedback cycles and user validation
+      - Minimal viable functionality delivery
+      - Rapid iteration capability
+      - Time-to-market optimization
+    </priorities>
+    
+    <constraints>
+      <code-quality-threshold>prototype-grade</code-quality-threshold>
+      <testing-requirements>basic-functionality-only</testing-requirements>
+      <documentation-level>inline-comments-minimal</documentation-level>
+      <architecture-complexity>simple-monolithic</architecture-complexity>
+      <dependency-management>minimal-external</dependency-management>
+    </constraints>
+    
+    <approach>
+      <development-method>iterative-rapid</development-method>
+      <validation-frequency>continuous-user-feedback</validation-frequency>
+      <refactoring-strategy>defer-until-stable</refactoring-strategy>
+      <error-handling>basic-graceful-degradation</error-handling>
+      <performance-optimization>defer-until-needed</performance-optimization>
+    </approach>
+  </behavior-modification>
+
+  <execution-parameters>
+    <quality-threshold>functional-prototype</quality-threshold>
+    <speed-preference>maximum</speed-preference>
+    <risk-tolerance>high-for-learning</risk-tolerance>
+    <iteration-cycle>1-2-days</iteration-cycle>
+  </execution-parameters>
+
+  <output-requirements>
+    <format>working-prototype</format>
+    <detail-level>minimal-sufficient</detail-level>
+    <additional-artifacts>
+      - Demo script or walkthrough
+      - User feedback collection plan
+      - Next iteration roadmap
+      - Key learnings documentation
+    </additional-artifacts>
+    <success-criteria>user-validation-readiness</success-criteria>
+  </output-requirements>
+
+  <implementation-guidelines>
+    <architecture>
+      - Start with monolithic structure
+      - Use familiar technologies and frameworks
+      - Minimize configuration and setup complexity
+      - Focus on core user journey implementation
+    </architecture>
+    
+    <development-practices>
+      - Code for clarity over optimization
+      - Use established patterns and libraries
+      - Implement happy path scenarios first
+      - Add error handling incrementally
+    </development-practices>
+    
+    <testing-approach>
+      - Manual testing for core workflows
+      - Basic unit tests for critical functions
+      - User acceptance testing prioritized
+      - Automated testing deferred initially
+    </testing-approach>
+  </implementation-guidelines>
+
+  <context-integration>
+    <required-files>
+      - User story definitions
+      - Basic wireframes or mockups
+      - Core feature requirements
+      - Target user personas
+    </required-files>
+    <external-references>
+      - UI/UX best practices
+      - Framework quick-start guides
+      - Prototype validation methodologies
+    </external-references>
+    <domain-knowledge>prototype-development</domain-knowledge>
+  </context-integration>
+</poml>

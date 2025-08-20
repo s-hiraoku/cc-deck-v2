@@ -129,22 +129,26 @@ cc-deck-v2/
 │       │       ├── workflow.poml    # POML-based AI workflow definitions
 │       │       └── context-state.json # Workflow context persistence state
 │       └── src/             # Implementation files
-├── workflows/               # POML + YAML hybrid workflow system
-│   ├── agents/              # POML-based agent definitions
-│   │   ├── spec-generator.poml      # CES specification agent
-│   │   ├── implementation.poml       # Implementation agent
-│   │   ├── validation.poml          # Testing and validation agent
-│   │   ├── context-bridge.poml      # Workflow context bridging agent
-│   │   └── orchestrator.poml        # Main workflow orchestration
-│   ├── templates/           # Dynamic POML workflow templates
-│   │   ├── spec-workflow.poml       # Specification generation workflow
-│   │   ├── impl-workflow.poml       # Implementation workflow
-│   │   ├── valid-workflow.poml      # Validation workflow
-│   │   └── context-bridge.poml      # Context transition templates
-│   └── config/              # YAML-based infrastructure configs
-│       ├── project-defaults.yaml    # Default project settings
-│       ├── quality-gates.yaml       # Quality assurance requirements
-│       └── context-config.yaml      # Context persistence configuration
+├── poml/                   # POML templates for commands and agent behaviors
+│   ├── commands/            # Slash command POML templates
+│   │   └── orchestrator.poml        # Unified command orchestrator
+│   └── agents/              # Agent behavior control POML templates
+│       ├── development-styles/
+│       │   ├── rapid-prototyping.poml       # Rapid prototyping behavior
+│       │   ├── enterprise-development.poml  # Enterprise development behavior
+│       │   └── performance-focused.poml     # Performance-focused behavior
+│       ├── review-styles/
+│       │   ├── strict-security-review.poml  # Strict security review behavior
+│       │   ├── architecture-review.poml     # Architecture review behavior
+│       │   └── code-quality-review.poml     # Code quality review behavior
+│       ├── testing-styles/
+│       │   ├── comprehensive-testing.poml   # Comprehensive testing behavior
+│       │   ├── unit-test-focused.poml      # Unit test focused behavior
+│       │   └── e2e-testing.poml            # E2E testing behavior
+│       └── domain-specific/
+│           ├── fintech-compliance.poml      # Fintech compliance behavior
+│           ├── healthcare-security.poml     # Healthcare security behavior
+│           └── e-commerce-optimization.poml # E-commerce optimization behavior
 ├── steering/                # Global steering files
 │   ├── coding-standards.md  # Project-wide coding conventions
 │   ├── architecture.md      # System architecture patterns
@@ -687,7 +691,7 @@ projects/{project-name}/specs/{feature-name}/
 
 ### Workflow Control Requirements
 When discussing workflow control:
-1. **Define storage mechanism**: POML files in `workflows/agents/` and `workflows/templates/`
+1. **Define storage mechanism**: POML files in `poml/commands/` and `poml/agents/`
 2. **Specify execution engine**: Claude Code with POML SDK integration for parsing and execution
 3. **Show state management**: JSON-based progress tracking with POML workflow state
 4. **Provide transition rules**: POML conditional blocks and loop structures for flow control

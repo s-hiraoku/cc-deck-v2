@@ -18,10 +18,12 @@ cc-deck-v2/
 │   └── agents/
 │       ├── spec-agent.md          # 静的: エージェント定義
 │       └── impl-agent.md          # 静的: エージェント定義
-├── workflows/
-│   └── templates/
-│       ├── spec-prompt.poml       # 動的: 仕様フェーズプロンプト
-│       └── impl-prompt.poml       # 動的: 実装フェーズプロンプト
+├── poml/
+│   ├── commands/
+│   │   └── orchestrator.poml      # 動的: 統一オーケストレーター
+│   └── agents/
+│       ├── spec-generator.poml    # 動的: 仕様生成エージェント挙動
+│       └── implementation.poml    # 動的: 実装エージェント挙動
 └── projects/
     └── {project-name}/
         └── .workflow/
@@ -103,7 +105,7 @@ async function execute_agent(agent_name, project_name) {
     const agent_def = await load_agent_definition(`.claude/agents/${agent_name}.md`);
     
     // 2. POMLテンプレートの読み込み
-    const poml_template = await fs.readFile(`workflows/templates/${phase}-prompt.poml`, 'utf8');
+    const poml_template = await fs.readFile(`poml/${phase}-prompt.poml`, 'utf8');
     const variables = await load_json(`projects/${project_name}/.workflow/variables.json`);
     
     // 3. pomljsでPOMLを処理
@@ -187,7 +189,7 @@ tools: [Task, Read, Write, Bash]
 
 Execute pomljs using Bash tool:
 ```bash
-npx pomljs compile workflows/templates/spec-prompt.poml \
+npx pomljs compile poml/spec-prompt.poml \
   --variables projects/test-project/.workflow/variables.json \
   --output .temp/compiled-prompt.md
 ```
@@ -248,7 +250,7 @@ Read project-specific prompt from `.workflow/context.poml`:
 ### 3. 状態管理
 
 ```json
-// workflows/config/workflow-state.json
+// config/workflow-state.json
 {
   "execution": {
     "last_run": "2025-01-17T12:00:00Z",
@@ -310,23 +312,23 @@ touch .claude/agents/new-agent.md
 # → 基本的なロール、責任、実行パターンを定義
 
 # 動的部分の準備
-touch workflows/templates/spec-prompt.poml
+touch poml/spec-prompt.poml
 # → フェーズ固有のプロンプトテンプレートを記述
 
 # pomljsでの検証
-npx pomljs validate workflows/templates/spec-prompt.poml
+npx pomljs validate poml/spec-prompt.poml
 ```
 
 ### 3. pomljsを使ったPOML処理パイプライン
 ```bash
 # 1. POML構文検証
-npx pomljs validate workflows/templates/spec-prompt.poml
+npx pomljs validate poml/spec-prompt.poml
 
 # 2. 変数ファイルの準備
 echo '{"PROJECT_NAME":"test-project","PHASE":"spec"}' > .temp/variables.json
 
 # 3. POMLコンパイル
-npx pomljs compile workflows/templates/spec-prompt.poml \
+npx pomljs compile poml/spec-prompt.poml \
   --variables .temp/variables.json \
   --output .temp/compiled-prompt.md
 

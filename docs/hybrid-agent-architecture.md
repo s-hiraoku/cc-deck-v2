@@ -94,106 +94,92 @@ Load dynamic prompt from: `.workflow/context.poml`
 
 ## 統合メカニズム
 
-### 1. エージェント実行時の統合
+### 1. オーケストレーターによる統一制御
 
-```javascript
-// pomljsを使用したPOML処理フロー
-import { compile } from 'pomljs';
+CC-Deck v2では、現在の統一orchestratorアーキテクチャに基づいて、POML behavior.pomlファイルを活用した動的挙動制御を実装します：
 
-async function execute_agent(agent_name, project_name) {
-    // 1. 静的定義の読み込み
-    const agent_def = await load_agent_definition(`.claude/agents/${agent_name}.md`);
-    
-    // 2. POMLテンプレートの読み込み
-    const poml_template = await fs.readFile(`poml/${phase}-prompt.poml`, 'utf8');
-    const variables = await load_json(`projects/${project_name}/.workflow/variables.json`);
-    
-    // 3. pomljsでPOMLを処理
-    const compiled_prompt = compile(poml_template, {
-        variables: variables,
-        context: {
-            PROJECT_NAME: project_name,
-            PHASE: phase,
-            TIMESTAMP: new Date().toISOString()
-        }
-    });
-    
-    // 4. エージェント実行
-    const result = await call_agent(agent_name, compiled_prompt);
-    
-    // 5. 状態の更新
-    await update_workflow_state(result);
-}
+#### 統一Orchestrator実行フロー
+```bash
+# 自然言語コマンド例
+/orchestrator create specification for fintech-app user-authentication with enterprise compliance
+
+# 実行フロー:
+1. プロンプト解析 → project: fintech-app, feature: user-authentication, behavior: enterprise-compliance
+2. behavior.poml読み込み → poml/agents/development-styles/enterprise-development.poml
+3. サブエージェント呼び出し → spec-generator with enterprise-compliance behavior
+4. 結果統合と状態更新 → spec.json更新、次アクション提案
 ```
 
-### 2. pomljsによるPOML処理の詳細
-
-```javascript
-// POML処理の具体例
-import { compile, validate } from 'pomljs';
-
-class POMLProcessor {
-    async processTemplate(templatePath, variables) {
-        // 1. POMLファイルの読み込み
-        const pomlContent = await fs.readFile(templatePath, 'utf8');
-        
-        // 2. POML構文の検証
-        const validation = validate(pomlContent);
-        if (!validation.valid) {
-            throw new Error(`POML validation failed: ${validation.errors}`);
-        }
-        
-        // 3. 変数とコンテキストの設定
-        const context = {
-            ...variables,
-            // システム変数
-            CURRENT_TIME: new Date().toISOString(),
-            WORKING_DIR: process.cwd()
-        };
-        
-        // 4. POML → プロンプト変換
-        const compiled = compile(pomlContent, context);
-        
-        return {
-            prompt: compiled.text,
-            metadata: compiled.metadata,
-            variables_used: compiled.variables
-        };
-    }
-    
-    async evaluateConditions(pomlContent, context) {
-        // 条件分岐の評価
-        return compile(pomlContent, context, {
-            evaluateConditionals: true
-        });
-    }
-}
-
-### 3. オーケストレーターでの制御
+#### POML Behavior制御の実装
+現在のアーキテクチャでは、個別エージェントがPOMLファイルを直接読み込み、挙動を動的に変更します：
 
 ```markdown
-# orchestrator.md
----
-name: hybrid-orchestrator
-tools: [Task, Read, Write, Bash]
----
+# .claude/agents/spec-generator.md実行例
 
-## Execution Steps
+## Process
+1. Always load POML behavior template if provided: poml/agents/{behavior}.poml
+2. Apply behavior modifications from POML
+3. Execute tasks based on POML priorities and constraints
+4. Generate output in POML-specified format
 
-1. Load static agent definition from `.claude/agents/`
-2. Process POML template using pomljs
-3. Generate dynamic prompt with variable substitution
-4. Call agent with compiled prompt
-
-## POML Processing Command
-
-Execute pomljs using Bash tool:
-```bash
-npx pomljs compile poml/spec-prompt.poml \
-  --variables projects/test-project/.workflow/variables.json \
-  --output .temp/compiled-prompt.md
+## Enterprise Compliance Behavior Example
+When behavior=enterprise-development:
+- Load: poml/agents/development-styles/enterprise-development.poml
+- Apply: Enterprise quality standards, comprehensive documentation
+- Output: Detailed specifications with compliance mapping
 ```
+
+### 2. POML Behavior Template Integration
+
+#### Enterprise Development Behavior (enterprise-development.poml)
+```xml
+<poml>
+  <role>Enterprise-grade specification generator with strict compliance requirements</role>
+  
+  <task>
+    Generate comprehensive specifications that meet enterprise standards including:
+    - Detailed security requirements and threat modeling
+    - Comprehensive compliance documentation (SOX, GDPR, HIPAA as applicable)
+    - Enterprise architecture alignment
+    - Risk assessment and mitigation strategies
+  </task>
+  
+  <constraints>
+    <quality-gates>
+      <security>Complete security analysis required</security>
+      <compliance>Regulatory compliance mapping mandatory</compliance>
+      <architecture>Enterprise architecture review required</architecture>
+    </quality-gates>
+  </constraints>
+  
+  <output-format>
+    Generate enterprise-grade specification with:
+    - Executive summary with business impact
+    - Detailed security analysis and threat model
+    - Compliance requirements mapping
+    - Risk assessment matrix
+    - Enterprise architecture integration plan
+  </output-format>
+</poml>
 ```
+
+### 3. 現在アーキテクチャとの整合
+
+#### Orchestrator-Mediated Workflow
+```yaml
+# 現在の実行フロー
+execution_flow:
+  1. unified_orchestrator: "/orchestrator [natural language]"
+  2. prompt_analysis: "Extract project, command, behavior parameters"
+  3. behavior_loading: "Load specified behavior.poml if provided"
+  4. subagent_invocation: "Call appropriate subagent with behavior instructions"
+  5. result_integration: "Integrate results and update state"
+```
+
+#### Static vs Dynamic Separation (Current Implementation)
+- **Static (.claude/agents/*.md)**: Basic agent definitions and Claude Code compliance
+- **Dynamic (poml/agents/*.poml)**: Behavior modification templates (existing files)
+- **Orchestrator (poml/commands/orchestrator.poml)**: Unified command processing and routing
 
 ## 実装例
 
@@ -289,117 +275,192 @@ Read project-specific prompt from `.workflow/context.poml`:
 
 ## 実装ガイドライン
 
-### 1. pomljsの依存関係管理
+### 1. POML仕様準拠の実装
 
-```json
-// package.json
-{
-  "dependencies": {
-    "pomljs": "^latest",
-    "@microsoft/poml": "^latest"
-  },
-  "scripts": {
-    "poml:compile": "pomljs compile",
-    "poml:validate": "pomljs validate"
-  }
-}
-```
+CC-Deck v2では、Microsoft POML仕様に準拠したテンプレートシステムを採用：
 
-### 2. エージェント作成時
-```bash
-# 静的部分の作成
-touch .claude/agents/new-agent.md
-# → 基本的なロール、責任、実行パターンを定義
-
-# 動的部分の準備
-touch poml/spec-prompt.poml
-# → フェーズ固有のプロンプトテンプレートを記述
-
-# pomljsでの検証
-npx pomljs validate poml/spec-prompt.poml
-```
-
-### 3. pomljsを使ったPOML処理パイプライン
-```bash
-# 1. POML構文検証
-npx pomljs validate poml/spec-prompt.poml
-
-# 2. 変数ファイルの準備
-echo '{"PROJECT_NAME":"test-project","PHASE":"spec"}' > .temp/variables.json
-
-# 3. POMLコンパイル
-npx pomljs compile poml/spec-prompt.poml \
-  --variables .temp/variables.json \
-  --output .temp/compiled-prompt.md
-
-# 4. 生成されたプロンプトの確認
-cat .temp/compiled-prompt.md
-```
-
-### 3. 変数展開
 ```xml
-<!-- variables.poml -->
+<!-- Microsoft POML仕様準拠のテンプレート例 -->
 <poml>
-  <paths>
-    <spec-dir>specs/</spec-dir>
-    <impl-dir>src/</impl-dir>
-    <test-dir>tests/</test-dir>
-  </paths>
+  <role>Specification generator with project-specific behavior</role>
   
-  <templates>
-    <file-header>
-      # Generated by CC-Deck v2
-      # Project: {{project_name}}
-      # Date: {{timestamp}}
-    </file-header>
-  </templates>
+  <task>
+    Generate high-quality specifications based on project requirements.
+    Apply behavior-specific modifications as needed.
+  </task>
+  
+  <document src="projects/{{project}}/project.json" />
+  <document src="specs/{{feature}}/requirements.md" optional="true" />
+  
+  <output-format>
+    Generate structured specification documents with:
+    - Clear requirements in EARS+ notation
+    - Technical design with architecture diagrams
+    - Implementation tasks with TDD approach
+  </output-format>
 </poml>
+```
+
+### 2. Claude Code環境での動作
+
+現在のアーキテクチャでは、Claude Codeが直接POMLファイルを読み込み、解釈します：
+
+```bash
+# Claude Codeでの実行例
+# 1. Orchestratorがbehavior指定を解析
+/orchestrator review fintech-app user-auth with strict security
+
+# 2. 該当するPOMLファイルを特定
+behavior_file: poml/agents/review-styles/strict-security-review.poml
+
+# 3. Sub-agentに挙動指示を渡す
+Task(subagent_type="code-reviewer", 
+     prompt="Review code with strict-security behavior applied...",
+     behavior_template="strict-security-review.poml")
+```
+
+### 3. 実装時の考慮事項
+
+#### POML制約への対応
+- **変数展開制限**: 複雑なスクリプティングではなく、シンプルな変数置換のみ
+- **条件分岐簡素化**: 基本的なif条件のみサポート
+- **ファイル参照**: 相対パスでの外部ファイル参照
+
+### 4. 現在の実装方針との整合
+
+CC-Deck v2では、以下の方針で統合アーキテクチャを実装：
+
+#### 責任分離の明確化
+```yaml
+# 責任分離
+responsibilities:
+  orchestrator: "プロンプト解析、ルーティング、状態管理"
+  sub_agent: "専門領域タスク実行、品質管理"
+  poml_behavior: "挙動制御、出力フォーマット調整"
+  
+# 現在の実装
+current_architecture:
+  static_agents: ".claude/agents/*.md (Claude Code準拠)"
+  behavior_templates: "poml/agents/*.poml (既存ファイル)"
+  unified_orchestrator: "poml/commands/orchestrator.poml"
+  state_management: "spec.json based project state"
 ```
 
 ## ベストプラクティス
 
-### 1. 静的定義のガイドライン
-- プロジェクトに依存しない共通ロジックのみ
-- 明確な実行ステップとパターン
-- TOMLファイルの参照パスを明記
+### 1. 現在アーキテクチャでの実装指針
+- **Orchestrator統一**: 全コマンドを`/orchestrator`経由で実行
+- **自然言語解析**: パラメータベースから自然言語プロンプト解析への移行
+- **POML制限遵守**: Microsoft POML仕様に厳格準拠
+- **Claude Code準拠**: Task()ツール制限、独立性確保
 
-### 2. 動的プロンプトのガイドライン
-- 条件分岐はPOMLの`if`属性で実装
-- 変数は`{{VARIABLE}}`形式で定義
-- セマンティックタグで構造を明確化
+### 2. POML使用ガイドライン
+- **セマンティックタグのみ**: `<role>`, `<task>`, `<output-format>`等
+- **シンプルな変数展開**: `{{project}}`, `{{feature}}`レベル
+- **外部ファイル参照**: `<document src="..."/>`による構造化データ取得
 
-### 3. 統合時の注意点
-- POMLファイルの存在確認を必須に
-- 変数展開の検証
-- 条件分岐の適切な処理
+### 3. エージェント統合時の注意点
+- **Behavior読み込み確認**: POMLファイル存在チェック必須
+- **デフォルト挙動保証**: Behaviorなしでも正常動作
+- **エラーハンドリング**: POML解析失敗時の適切な処理
 
-## 移行計画
+## 現在の実装状況と今後の計画
 
-### Phase 1: 基本実装
-1. 既存エージェントの.md部分を維持
-2. POMLテンプレートファイルの導入
-3. POML処理ロジックの追加
+### 現在の状況
+- **Orchestrator統一**: 基本アーキテクチャ設計完了
+- **4コアSub-agent**: spec-generator, code-reviewer, implementation, validation
+- **POML behavior**: 既存テンプレートファイル群
+- **状態管理**: spec.jsonベースの進捗管理
 
-### Phase 2: 完全統合
-1. すべてのプロンプトテンプレートをPOMLに移行
-2. オーケストレーターのPOML対応
-3. 動的プロンプト生成の実装
+### 実装優先度
+```yaml
+priority_1:
+  - orchestrator.pomlの完成
+  - 4コアsub-agentのPOML behavior統合
+  - 基本的な自然言語コマンド処理
 
-### Phase 3: 最適化
-1. キャッシング機構の導入
-2. 変数展開の高度化
-3. バリデーション強化
+priority_2:
+  - より多くのbehavior.pomlテンプレート
+  - エラーハンドリング強化
+  - プロジェクトコンテキスト管理
+
+priority_3:
+  - 高度なプロンプト解析
+  - 複数プロジェクト並列サポート
+  - パフォーマンス最適化
+```
+
+## 人間承認との統合
+
+### POML Behaviorにおける承認対応
+```xml
+<poml>
+  <role>Specification generator with approval-aware output formatting</role>
+  
+  <task>
+    Generate specifications that require human approval before proceeding.
+    Clearly mark approval requirements and provide approval commands.
+  </task>
+  
+  <constraints>
+    <approval-required>
+      <deliverable>requirements.md</deliverable>
+      <deliverable>design.md</deliverable>
+      <deliverable>tasks.md</deliverable>
+    </approval-required>
+  </constraints>
+  
+  <output-format>
+    End all specification deliverables with:
+    
+    ## 🔍 Human Approval Required
+    
+    This deliverable requires human approval before proceeding to the next phase.
+    
+    **Approval Command**:
+    ```bash
+    /orchestrator approve {{deliverable_type}} for {{project}} {{feature}}
+    ```
+    
+    **Next Steps**: Implementation phase will be available after approval.
+  </output-format>
+</poml>
+```
+
+### Behavior Template統合での承認制御
+現在のアーキテクチャでは、各sub-agentがbehavior.pomlを読み込み時に、承認要件も同時に適用：
+
+```yaml
+approval_integration:
+  spec_generator:
+    - 成果物生成時に承認要件を自動付与
+    - spec.json承認状況の確認と更新
+    - 承認コマンドの具体的提示
+  
+  code_reviewer:
+    - 重大問題発見時の承認保留推奨
+    - セキュリティ問題の承認前修正要求
+  
+  implementation:
+    - 品質ゲート未通過時の承認ブロック
+    - テストカバレッジ不足時の実装承認延期
+  
+  validation:
+    - 最終承認のための検証結果整理
+    - ステークホルダー承認準備
+```
 
 ## まとめ
 
-ハイブリッドアーキテクチャにより：
+CC-Deck v2のハイブリッドアーキテクチャは、現在の統一orchestrator設計と完全に整合し：
 
-- **開発効率の向上**: 静的と動的の明確な分離
-- **保守性の向上**: 変更箇所の局所化
-- **拡張性の確保**: 新しいプロジェクトへの適用が容易
-- **可読性の向上**: POMLのセマンティックタグによる構造化
+- **統一インターフェース**: `/orchestrator`による自然言語コマンド処理
+- **動的挙動制御**: 既存behavior.pomlテンプレートによる柔軟な実行制御
+- **明確な責任分離**: orchestrator（調整）+ sub-agent（実行）+ POML（挙動制御）
+- **人間承認統合**: 成果物生成時の自動承認要件適用
+- **拡張性**: 新しいbehaviorテンプレートの追加による機能拡張
 
-このアプローチは、Claude Codeの制約内で最大限の柔軟性を提供し、CC-Deck v2の目標である「時間のかかるワークフローを単一コマンドに」を実現する基盤となる。
+このアプローチにより「時間のかかるワークフローを単一コマンドに」という目標を実現し、人間承認による品質制御を維持しながら、AI-native開発プラットフォームとして高い価値を提供します。
 
 ---
 

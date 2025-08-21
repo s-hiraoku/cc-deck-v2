@@ -2,170 +2,213 @@
 
 ## 概要
 
-CC-Deck v2におけるオーケストレーターは、**ワークフロー全体の制御エンジン**として機能し、Spec→Impl→Validの各フェーズを統合的に管理する中核コンポーネントです。POMLテンプレートとサブエージェントを活用し、AIネイティブな開発プラットフォームの実現を担います。
+CC-Deck v2におけるオーケストレーターは、**統一された自然言語インターフェース**として機能し、ユーザーの自然言語指示を解析してプロジェクトコンテキストに基づいて適切なサブエージェントにタスクを委譲する中核コンポーネントです。`/orchestrator`コマンドによる単一エントリーポイントで、Spec→Impl→Validの各フェーズを統合的に管理します。
 
 ## 基本設計原則
 
-### 1. **中央制御型アーキテクチャ**
-- **単一制御点**: すべてのワークフロー決定を一元管理
-- **エージェント統制**: Task()ツールによる厳密なサブエージェント制御
-- **状態一貫性**: プロジェクト状態の信頼できる単一ソース
+### 1. **統一インターフェース型アーキテクチャ**
+- **単一エントリーポイント**: `/orchestrator`コマンドによる自然言語インターフェース
+- **プロンプト解析**: 自然言語からのパラメータ抽出と意図理解
+- **サブエージェント調整**: Claude Code Sub-agentの適切な選択と呼び出し
 
-### 2. **適応型実行モデル**
-- **コンテキスト感応**: プロジェクト状態に基づく動的な実行戦略
-- **条件分岐**: 品質ゲートとリスク評価による分岐制御
-- **自動復旧**: エラー検出と適切な復旧アクション
+### 2. **プロジェクトコンテキスト駆動モデル**
+- **必須プロジェクト特定**: すべての操作でプロジェクトコンテキストが必要
+- **フェーズベース制御**: spec.jsonによる現在フェーズと承認状況の管理
+- **状態整合性**: プロジェクトごとの独立した状態管理
 
-### 3. **品質重視の統制**
-- **品質ゲート強制**: 各フェーズでの必須品質チェック
-- **承認管理**: 自動承認vs人的承認の適切な判定
-- **メトリクス追跡**: 継続的な品質指標の監視
+### 3. **POML挙動制御統合**
+- **既存テンプレート活用**: 事前定義されたbehavior.pomlファイルの使用
+- **動的挙動適用**: サブエージェントへのPOML behavior指示
+- **責任分離**: orchestrator（調整）+ sub-agent（実行）+ POML（挙動制御）
 
 ## 核心責務定義
 
 ### A. ワークフロー制御責務
 
-#### A1. プロジェクト状態分析
+#### A1. 自然言語プロンプト解析
 ```typescript
-interface ProjectAnalysis {
-  // 現在の実行フェーズを判定
-  analyzeCurrentPhase(): PhaseDecision
+interface PromptAnalysis {
+  // プロンプトからパラメータを抽出
+  extractParameters(prompt: string): ExtractedParams
   
-  // 利用可能なアクションを特定  
-  identifyAvailableActions(): ActionOption[]
+  // プロジェクト特定（必須）
+  identifyProject(prompt: string): ProjectIdentification
   
-  // 依存関係とブロッカーを確認
-  validateDependencies(): DependencyStatus
+  // コマンド種別の識別
+  classifyCommand(prompt: string): CommandType
   
-  // 次の実行ステップを決定
-  determineNextSteps(): ExecutionPlan
+  // 挙動テンプレートの特定
+  detectBehavior(prompt: string): BehaviorTemplate
+}
+
+interface ExtractedParams {
+  project: string
+  feature?: string
+  command: 'review' | 'implement' | 'spec' | 'continue' | 'approve'
+  target?: string
+  behavior?: string
 }
 ```
 
 **実装要件**:
-- state.jsonファイルの解析と状態判定
-- ファイルシステムによる完了状況の検証
-- 依存関係マトリクスによるブロッカー検出
-- プロジェクト固有の設定とルールの適用
+- orchestrator.pomlによるプロンプト解析ルール
+- プロジェクト不明時の対話的確認
+- キーワードベースのパラメータ抽出
+- 曖昧さ解決のためのユーザー確認
 
-#### A2. フェーズ遷移管理
+#### A2. プロジェクトコンテキスト管理
 ```typescript
-interface PhaseTransition {
-  // フェーズ完了条件の検証
-  validatePhaseCompletion(phase: Phase): CompletionStatus
+interface ProjectContext {
+  // プロジェクト状態の読み込み
+  loadProjectState(project: string, feature?: string): ProjectState
   
-  // 次フェーズへの遷移実行
-  executePhaseTransition(from: Phase, to: Phase): TransitionResult
+  // フェーズと承認状況の確認
+  validatePhaseStatus(state: ProjectState): PhaseValidation
   
-  // コンテキスト橋渡しの管理
-  bridgePhaseContext(transition: PhaseTransition): ContextBridge
+  // 実行制約の検証
+  checkExecutionConstraints(command: CommandType, state: ProjectState): ConstraintCheck
   
-  // 並列実行機会の特定
-  identifyParallelOpportunities(): ParallelTaskSet[]
+  // 次アクションの提案
+  suggestNextActions(state: ProjectState): ActionSuggestions
+}
+
+interface ProjectState {
+  phase: string
+  approvals: ApprovalStatus
+  progress: ProgressMetrics
+  context_references: string[]
+  mcp_tools: string[]
 }
 ```
 
 **実装要件**:
-- 完了クライテリアのチェックリスト実行
-- コンテキストファイルの適切な受け渡し
-- 並列実行可能タスクの動的識別
-- フェーズ間でのデータ整合性保証
+- project.json と spec.json の読み込み
+- フェーズベースの実行制約確認
+- 承認ゲートの自動チェック
+- ステアリングファイルの考慮
 
 ### B. エージェント管理責務
 
-#### B1. プロンプト生成とエージェント実行
+#### B1. サブエージェント選択と実行
 ```typescript
-interface AgentExecution {
-  // 適切なエージェントを選択
-  selectAgent(context: ExecutionContext): AgentConfig
+interface AgentOrchestration {
+  // コマンドに基づくエージェント選択
+  selectSubAgent(command: CommandType): SubAgentConfig
   
-  // POMLテンプレートをコンパイル
-  compilePromptTemplate(template: POMLTemplate, variables: ContextVars): string
+  // POML behavior templateの特定
+  identifyBehaviorTemplate(behavior: string): BehaviorTemplate | null
   
-  // エージェントを実行し結果を監視
-  executeAgent(agent: AgentConfig, prompt: string): Promise<AgentResult>
+  // サブエージェント呼び出し
+  invokeSubAgent(agent: SubAgentConfig, context: ExecutionContext, behavior?: BehaviorTemplate): Promise<AgentResult>
   
-  // 複数エージェントの協調実行
-  orchestrateMultipleAgents(tasks: AgentTask[]): Promise<CoordinationResult>
+  // 実行結果の統合
+  integrateResults(results: AgentResult[]): IntegratedResult
+}
+
+interface ExecutionContext {
+  project: string
+  feature?: string
+  target?: string
+  projectState: ProjectState
+  behaviorInstructions?: string
 }
 ```
 
 **実装要件**:
-- pomljsによるPOMLテンプレートの動的コンパイル
-- Task()ツールによる厳密なエージェント呼び出し
-- エージェント実行のリアルタイム監視
-- タイムアウトとリソース制限の管理
+- Claude Code Sub-agentの適切な選択
+- behavior.pomlファイルの読み込みと適用指示
+- サブエージェントへのコンテキスト情報渡し
+- 実行結果の品質確認と統合
 
 #### B2. エラーハンドリングと復旧
 ```typescript
 interface ErrorRecovery {
-  // エラーの検出と分類
-  detectAndClassifyErrors(execution: AgentExecution): ErrorClassification
+  // プロンプト解析エラーの処理
+  handlePromptAnalysisError(prompt: string): PromptClarificationRequest
   
-  // 自動復旧戦略の実行
-  attemptAutomaticRecovery(error: ClassifiedError): RecoveryResult
+  // プロジェクト特定失敗時の対話
+  handleProjectIdentificationFailure(): ProjectSelectionDialog
   
-  // 人的介入の要求と管理
-  requestHumanIntervention(escalation: EscalationRequest): InterventionResult
+  // サブエージェント実行エラーの処理
+  handleSubAgentError(error: SubAgentError): ErrorRecoveryStrategy
   
-  // 状態の一貫性回復
-  restoreConsistentState(checkpoint: StateCheckpoint): RestorationResult
+  // フェーズ制約違反の処理
+  handlePhaseConstraintViolation(violation: ConstraintViolation): ConstraintGuidance
 }
 ```
 
 **実装要件**:
-- エラーパターンの系統的分類
-- チェックポイントベースの状態復旧
-- 段階的エスカレーション戦略
-- 失敗から学習する改善メカニズム
+- 自然言語プロンプトの曖昧さ解決
+- プロジェクト不明時の対話的確認
+- サブエージェント失敗時の適切なフィードバック
+- フェーズ制約エラーの明確な説明と次アクション提案
 
 ### C. 品質制御責務
 
-#### C1. 品質ゲート管理
+#### C1. 状態更新と承認制御
 ```typescript
-interface QualityGate {
-  // 品質メトリクスの収集と評価
-  collectQualityMetrics(output: AgentOutput): QualityMetrics
+interface StateManagement {
+  // プロジェクト状態の更新
+  updateProjectState(project: string, feature: string, updates: StateUpdates): UpdateResult
   
-  // 品質ゲートの判定実行
-  evaluateQualityGate(metrics: QualityMetrics, gate: GateConfig): GateDecision
+  // spec.jsonの承認状況更新
+  updateApprovalStatus(project: string, feature: string, phase: string, approved: boolean): UpdateResult
   
-  // 承認プロセスの管理
-  manageApprovalProcess(decision: GateDecision): ApprovalResult
+  // 承認ゲート検証
+  validateApprovalGates(project: string, feature: string, targetPhase: string): ApprovalGateResult
   
-  // 品質基準の動的調整
-  adaptQualityStandards(history: QualityHistory): StandardsUpdate
+  // 次アクションの提案
+  suggestNextActions(currentState: ProjectState): ActionSuggestions
+  
+  // 進捗レポートの生成
+  generateProgressReport(project: string): ProgressReport
+}
+
+interface ApprovalGateResult {
+  canProceed: boolean
+  missingApprovals: string[]
+  requiredActions: string[]
 }
 ```
 
 **実装要件**:
-- テストカバレッジ、コード品質、セキュリティ指標の自動収集
-- リスクベースの承認ルーティング
-- 品質トレンド分析による基準の適応的調整
-- ステークホルダー通知とフィードバック管理
+- spec.jsonファイルの正確な読み書き
+- 承認ゲートの自動チェックと進行制御
+- 人間承認必須フェーズの識別と制約実施
+- フェーズベースの次アクション提案
+- ユーザーフレンドリーな進捗表示
 
-#### C2. 継続的改善
+**承認コマンド処理**:
+```bash
+# 承認コマンドの解析と処理
+/orchestrator approve requirements for fintech-app user-auth
+→ UpdateApprovalStatus("fintech-app", "user-auth", "requirements", true)
+→ ValidateApprovalGates() → 次フェーズ進行可否判定
+→ SuggestNextActions() → "design generation ready"
+```
+
+#### C2. フィードバック管理
 ```typescript
-interface ContinuousImprovement {
-  // 実行パフォーマンスの分析
-  analyzeExecutionPerformance(history: ExecutionHistory): PerformanceInsights
+interface FeedbackManagement {
+  // サブエージェント実行結果の統合
+  integrateSubAgentResults(results: SubAgentResult[]): IntegratedResult
   
-  // ワークフロー最適化の提案
-  suggestWorkflowOptimizations(analysis: PerformanceAnalysis): OptimizationSuggestions
+  // 実行サマリーの生成
+  generateExecutionSummary(execution: ExecutionContext): ExecutionSummary
   
-  // 学習データの蓄積と活用
-  accumulateLearningData(execution: CompletedExecution): LearningUpdate
+  // ユーザーへの結果報告
+  reportResultsToUser(summary: ExecutionSummary): UserReport
   
-  // ベストプラクティスの抽出
-  extractBestPractices(successfulExecutions: ExecutionSet): BestPracticeRules
+  // 次回実行のための学習
+  learnFromExecution(execution: CompletedExecution): LearningInsights
 }
 ```
 
 **実装要件**:
-- 実行時間、品質指標、エラー率の継続追跡
-- 機械学習による最適化パターンの発見
-- 成功事例からのルール抽出
-- 組織知識ベースの構築と更新
+- サブエージェント結果の品質確認
+- わかりやすい実行サマリー生成
+- 次回の改善点の識別
+- 実行履歴の蓄積
 
 ### D. コンテキスト管理責務
 
@@ -221,73 +264,85 @@ interface CrossProjectLearning {
 ```
 ┌─────────────────────────────────────────┐
 │ User Interface Layer                    │
-│ /orchestrator [project] [options]       │
+│ /orchestrator [自然言語指示]            │
 └─────────────┬───────────────────────────┘
               │
 ┌─────────────▼───────────────────────────┐
-│ Decision Engine                         │
-│ - State Analysis                        │
-│ - Phase Transition Logic               │
-│ - Quality Gate Evaluation             │
+│ Prompt Analysis Engine                  │
+│ - Natural Language Parameter Extraction│
+│ - Project Context Loading              │
+│ - Command Classification               │
 └─────────────┬───────────────────────────┘
               │
 ┌─────────────▼───────────────────────────┐
-│ Execution Engine                        │
-│ - POML Template Compilation            │
-│ - Agent Coordination                   │
-│ - Error Recovery                       │
+│ Routing & Execution Engine              │
+│ - Sub-Agent Selection                   │
+│ - Behavior Template Application        │
+│ - Execution Coordination               │
 └─────────────┬───────────────────────────┘
               │
 ┌─────────────▼───────────────────────────┐
 │ State Management Layer                  │
-│ - Workflow State Persistence          │
-│ - Context Bridge Management           │
-│ - Quality Metrics Tracking            │
+│ - spec.json State Persistence          │
+│ - Project Context Management           │
+│ - Approval Status Tracking             │
 └─────────────────────────────────────────┘
 ```
 
-### コンポーネント間インターフェース
+### 主要実行フロー
 
-#### A. Decision Engine ⟷ Execution Engine
+#### 統一orchestrator実行フロー（11ステップ）
+
+1. **コマンド起動**: `/orchestrator [natural language instruction]`
+2. **POML テンプレート読み込み**: `orchestrator.poml`の実行
+3. **変数初期化**: ユーザープロンプトの受け取り
+4. **プロンプト解析**: パラメータ抽出（project, command, target, behavior, feature）
+5. **プロジェクト確認**: 不明時は対話的確認
+6. **プロジェクトコンテキスト読み込み**: `spec.json`と`project.json`
+7. **フェーズ検証**: 現在フェーズと実行制約の確認
+8. **コマンドルーティング**: 適切なサブエージェントの選択
+9. **挙動テンプレート適用**: `behavior.poml`の指定（該当時）
+10. **サブエージェント実行**: 選択されたエージェントでタスク実行
+11. **結果生成と状態更新**: 結果統合、`spec.json`更新、次アクション提案
+
+#### 主要インターフェース
+
 ```typescript
-interface DecisionToExecution {
-  executeDecision(decision: ExecutionDecision): Promise<ExecutionResult>
-  reportExecutionStatus(status: ExecutionStatus): void
-  requestAdditionalContext(request: ContextRequest): ContextResponse
+// プロンプト解析 → ルーティング
+interface PromptToRouting {
+  extractedParams: ExtractedParams
+  projectContext: ProjectContext
+  executionConstraints: ConstraintCheck[]
 }
-```
 
-#### B. Execution Engine ⟷ State Management
-```typescript
-interface ExecutionToState {
-  saveExecutionResult(result: ExecutionResult): PersistenceConfirmation
-  loadExecutionContext(request: ContextRequest): ExecutionContext
-  updateQualityMetrics(metrics: QualityUpdate): MetricsConfirmation
+// ルーティング → サブエージェント
+interface RoutingToSubAgent {
+  selectedAgent: SubAgentConfig
+  behaviorTemplate?: BehaviorTemplate
+  executionContext: ExecutionContext
 }
-```
 
-#### C. Decision Engine ⟷ State Management
-```typescript
-interface DecisionToState {
-  queryProjectState(project: ProjectId): ProjectState
-  evaluateQualityGates(project: ProjectId): QualityGateStatus
-  requestApprovalHistory(project: ProjectId): ApprovalHistory
+// サブエージェント → 状態管理
+interface SubAgentToState {
+  executionResult: SubAgentResult
+  stateUpdates: StateUpdates
+  nextActionSuggestions: ActionSuggestions
 }
 ```
 
 ## 品質・性能要件
 
 ### 機能的要件
-- **正確性**: 99.9%以上の状態遷移成功率
-- **完全性**: すべての実行ステップの追跡可能性
-- **一貫性**: セッション間での状態整合性保証
-- **可用性**: 24/7での稼働サポート
+- **プロンプト解析精度**: 95%以上の意図理解成功率
+- **プロジェクト特定**: 必須プロジェクトコンテキストの100%確保
+- **フェーズ整合性**: spec.jsonベースの状態管理100%準拠
+- **エラーハンドリング**: わかりやすいエラーメッセージと次アクション提案
 
 ### 非機能的要件
-- **パフォーマンス**: 状態分析3秒以内、エージェント起動10秒以内
-- **スケーラビリティ**: 同時100プロジェクト実行サポート
-- **信頼性**: 99.5%のアップタイム維持
-- **保守性**: モジュラー設計による個別コンポーネント更新
+- **応答性**: プロンプト解析3秒以内、サブエージェント起動10秒以内
+- **使いやすさ**: 自然言語による直感的なインターフェース
+- **拡張性**: 新しいbehavior.pomlテンプレートの追加対応
+- **保守性**: orchestrator.pomlによる設定管理
 
 ### セキュリティ要件
 - **認証**: ユーザー認証とプロジェクトアクセス制御
@@ -297,49 +352,49 @@ interface DecisionToState {
 
 ## 実装ロードマップ
 
-### Phase 1: Core Engine (Week 1-2)
-- [ ] 基本的なワークフロー制御ループ
-- [ ] POMLテンプレートコンパイル統合
-- [ ] 基本的なエージェント実行制御
-- [ ] 状態永続化メカニズム
+### Phase 1: MVP Orchestrator (Week 1-2)
+- [ ] 自然言語プロンプト解析機能
+- [ ] orchestrator.pomlテンプレート実装
+- [ ] 基本的なサブエージェント呼び出し
+- [ ] spec.json状態管理
 
-### Phase 2: Quality Control (Week 3-4)
-- [ ] 品質ゲート評価システム
-- [ ] 承認プロセス管理
-- [ ] エラーハンドリングと復旧
-- [ ] メトリクス収集と分析
+### Phase 2: 挙動制御統合 (Week 3-4)
+- [ ] behavior.pomlテンプレート読み込み
+- [ ] プロジェクトコンテキスト管理
+- [ ] フェーズ制約チェック
+- [ ] エラーハンドリングと対話機能
 
-### Phase 3: Intelligence Layer (Week 5-6)
-- [ ] 自動意思決定アルゴリズム
-- [ ] 学習データ蓄積機構
-- [ ] 最適化推奨システム
-- [ ] 予測分析機能
+### Phase 3: 品質向上 (Week 5-6)
+- [ ] プロンプト解析精度向上
+- [ ] より多くのbehaviorテンプレート
+- [ ] 実行結果の品質チェック
+- [ ] ユーザーエクスペリエンス改善
 
-### Phase 4: Enterprise Features (Week 7-8)
-- [ ] マルチプロジェクト並列実行
-- [ ] 組織レベルの学習統合
-- [ ] 高度な監視とアラート
+### Phase 4: 拡張機能 (Week 7-8)
+- [ ] 複数プロジェクト並列サポート
+- [ ] 高度なコンテキスト管理
 - [ ] パフォーマンス最適化
+- [ ] 包括的なドキュメント完成
 
 ## 成功指標
 
 ### 開発効率指標
-- **ワークフロー完了時間**: 従来比50%削減
-- **エラー率**: 5%未満
-- **人的介入頻度**: 20%未満
-- **再実行率**: 10%未満
+- **コマンド成功率**: 90%以上のワンショット成功率
+- **プロンプト理解精度**: 95%以上の意図理解
+- **プロジェクト特定精度**: 100%の必須コンテキスト確保
+- **エラー解決時間**: 平均2分以内の問題解決
 
 ### 品質指標
-- **成果物品質**: 95%以上の品質ゲート合格率
-- **テストカバレッジ**: 95%以上の維持
-- **セキュリティ**: ゼロクリティカル脆弱性
-- **ドキュメント品質**: 90%以上の完全性
+- **状態整合性**: spec.jsonベースの100%正確な状態管理
+- **フェーズ制約遵守**: 100%のワークフロー順序準拠
+- **サブエージェント成功率**: 95%以上のタスク完了率
+- **behavior適用精度**: 意図されたPOML挙動の正確な適用
 
 ### ユーザー体験指標
-- **ユーザー満足度**: 4.5/5.0以上
-- **学習コスト**: 新規ユーザー1日以内の習得
-- **操作効率**: 単一コマンドでのワークフロー完了
-- **エラー回復**: 5分以内の自動復旧
+- **直感性**: 自然言語による簡単なコマンド実行
+- **学習コスト**: 基本操作30分以内の習得
+- **エラー理解**: わかりやすいエラーメッセージと修正ガイド
+- **進捗可視性**: 明確な現在状態と次アクションの提示
 
 ## 拡張性・将来性
 

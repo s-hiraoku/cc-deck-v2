@@ -40,44 +40,30 @@ CC-Deck v2では、**固定インフラストラクチャ**と**POML挙動制御
 
 ### 3.1 カスタムスラッシュコマンド
 
-#### 基本コマンドセット
+#### 統一オーケストレーターコマンド
 ```bash
-# プロジェクト管理
-/project-init [project-name]                    # プロジェクト初期化
-/project-switch [project-name]                  # プロジェクト切り替え
-/project-list                                   # プロジェクト一覧
-
-# CES仕様ワークフロー
-/spec-init [project] [feature]                  # 仕様生成開始
-/spec-requirements [project] [feature]          # 要件定義生成
-/spec-design [project] [feature]                # 技術設計生成
-/spec-tasks [project] [feature]                 # 実装タスク生成
-
-# 実装ワークフロー
-/implement [project] [feature]                  # 実装実行
-/review [target] [--behavior=template]          # コードレビュー
-/test [project] [feature] [--behavior=template] # テスト実行
-/validate [project] [feature]                   # 検証実行
-
-# 承認・状態管理
-/approve-requirements [project] [feature]       # 要件承認
-/approve-design [project] [feature]             # 設計承認
-/approve-tasks [project] [feature]              # タスク承認
-
-# 高度なワークフロー
-/deploy [project] [--env=environment]           # デプロイ実行
-/dashboard [project]                             # プロジェクトダッシュボード
-```
-
-#### コマンド実行時の POML 統合
-```bash
-# 基本形式
-/command [args] [--behavior=poml-template]
+# 統一エントリーポイント
+/orchestrator [自然言語指示]
 
 # 実例
-/review auth-module --behavior=strict-security-review
-/implement user-auth --behavior=rapid-prototyping
-/test payment-flow --behavior=enterprise-validation
+/orchestrator review authentication module with strict security analysis
+/orchestrator implement user authentication feature using rapid prototyping
+/orchestrator create specification for payment system
+/orchestrator continue fintech-app user-auth
+/orchestrator approve design for fintech-app user-auth
+```
+
+#### 自然言語プロンプト解析による挙動制御
+```bash
+# POML behavior自動識別
+/orchestrator review auth-module with security focus
+→ behavior = "strict-security-review"
+
+/orchestrator implement user-auth using rapid approach  
+→ behavior = "rapid-prototyping"
+
+/orchestrator test payment-flow with enterprise validation
+→ behavior = "enterprise-validation"
 ```
 
 ### 3.2 専門サブエージェント
@@ -136,9 +122,9 @@ Always ensure outputs meet CC-Deck v2 quality standards while following any POML
 
 ```
 poml/
-├── commands/                            # スラッシュコマンド用POMLテンプレート
-│   └── orchestrator.poml                # 統一コマンドオーケストレーター
-└── agents/                              # エージェント挙動制御用POMLテンプレート
+├── commands/                            # オーケストレーター用POMLテンプレート
+│   └── orchestrator.poml                # 統一コマンドオーケストレーター（プロンプト解析・ルーティング）
+└── agents/                              # エージェント挙動制御用POMLテンプレート（既存ファイル）
     ├── development-styles/
     │   ├── rapid-prototyping.poml       # 高速プロトタイピング
     │   ├── enterprise-development.poml  # エンタープライズ開発
@@ -347,35 +333,44 @@ poml/
 
 ## 5. 実行エンジンとワークフロー
 
-### 5.1 コマンド実行フロー
+### 5.1 Orchestrator実行フロー
 
 ```
-1. Command Parsing
-   ├── Extract base command (/review)
-   ├── Parse target (auth-module)
-   └── Identify behavior template (--behavior=strict-security-review)
+1. Natural Language Analysis (orchestrator.poml)
+   ├── Extract project identification (必須)
+   ├── Parse command type (review/implement/spec/continue/approve)
+   ├── Identify target (file/module/feature)
+   └── Detect behavior template (security/rapid/enterprise)
 
-2. Infrastructure Loading
-   ├── Load appropriate sub-agent (code-reviewer)
-   ├── Initialize base capabilities
-   └── Prepare standard workflow
+2. Project Context Loading
+   ├── Load project.json and spec.json
+   ├── Validate current phase and approval status
+   ├── Check execution constraints
+   └── Prepare project-specific context
 
-3. POML Behavior Integration
-   ├── Load specified POML template
-   ├── Parse behavior modifications
-   ├── Apply constraints and priorities
-   └── Override default patterns
+3. Sub-agent Selection & Routing
+   ├── Select appropriate sub-agent based on command
+   ├── Validate agent capabilities for task
+   ├── Prepare agent invocation parameters
+   └── Load behavior POML if specified
 
-4. Execution
-   ├── Execute with modified behavior
-   ├── Apply POML-defined constraints
+4. POML Behavior Integration  
+   ├── Load behavior template (existing file)
+   ├── Parse behavior modifications (priorities/constraints)
+   ├── Prepare behavior instructions for sub-agent
+   └── Override default patterns with POML
+
+5. Sub-agent Execution
+   ├── Invoke sub-agent with behavior modifications
+   ├── Monitor execution and apply constraints
    ├── Generate outputs per POML requirements
    └── Maintain quality standards
 
-5. Result Integration
-   ├── Validate outputs against both base and POML standards
-   ├── Generate additional artifacts if specified
-   └── Update project state
+6. Result Integration & State Update
+   ├── Validate outputs against standards
+   ├── Update project state (spec.json)
+   ├── Generate next action recommendations
+   └── Return integrated results
 ```
 
 ### 5.2 Agent-POML Integration Pattern
@@ -405,13 +400,18 @@ POML Behavior Integration Protocol:
 
 Example Integration:
 ```
-Input: /review auth-module --behavior=strict-security-review
+Input: /orchestrator review authentication module with strict security analysis
 Process:
-1. Load code-reviewer agent
-2. Load strict-security-review.poml
-3. Apply security-focused priorities and constraints
-4. Execute review with enhanced security analysis
-5. Generate security audit report format
+1. orchestrator.poml analyzes prompt and extracts:
+   - command: "review"
+   - target: "authentication module"  
+   - behavior: "strict-security-review"
+   - project: [対話的確認または推測]
+2. Load code-reviewer sub-agent
+3. Load strict-security-review.poml behavior template
+4. Instruct sub-agent to apply POML behavior modifications
+5. Sub-agent executes review with security-focused analysis
+6. Generate security audit report per POML output format
 ```
 ```
 
@@ -419,43 +419,40 @@ Process:
 
 ### 6.1 典型的な使用パターン
 
-#### Development Workflow
+#### Enterprise Development Workflow
 ```bash
-# 1. プロジェクト初期化
-/project-init fintech-app
+# 1. セキュリティ重視の仕様生成
+/orchestrator create comprehensive specification for fintech-app user-authentication with enterprise compliance
 
-# 2. セキュリティ重視の仕様生成
-/spec-init fintech-app user-auth --behavior=fintech-compliance
+# 2. 設計承認
+/orchestrator approve design for fintech-app user-authentication
 
 # 3. エンタープライズ品質の実装
-/implement fintech-app user-auth --behavior=enterprise-development
+/orchestrator implement fintech-app user-authentication using enterprise development approach
 
 # 4. 厳格なセキュリティレビュー
-/review user-auth --behavior=strict-security-review
+/orchestrator review user-authentication with strict security analysis
 
 # 5. 包括的テスト実行
-/test fintech-app user-auth --behavior=comprehensive-testing
+/orchestrator test fintech-app user-authentication with comprehensive coverage
 
 # 6. コンプライアンス検証
-/validate fintech-app user-auth --behavior=fintech-compliance
+/orchestrator validate fintech-app user-authentication against fintech compliance requirements
 ```
 
 #### Rapid Prototyping Workflow
 ```bash
-# 1. プロトタイプ プロジェクト初期化
-/project-init mvp-demo
+# 1. 高速仕様生成
+/orchestrator create minimal specification for mvp-demo core-features using rapid prototyping
 
-# 2. 高速仕様生成
-/spec-init mvp-demo core-features --behavior=rapid-prototyping
+# 2. 最小実装
+/orchestrator implement mvp-demo core-features with rapid prototyping approach
 
-# 3. 最小実装
-/implement mvp-demo core-features --behavior=rapid-prototyping
+# 3. 基本テスト
+/orchestrator test mvp-demo core-features focusing on unit tests only
 
-# 4. 基本テスト
-/test mvp-demo core-features --behavior=unit-test-focused
-
-# 5. ユーザビリティ検証
-/validate mvp-demo core-features --behavior=user-experience-focused
+# 4. ユーザビリティ検証
+/orchestrator validate mvp-demo core-features with user experience focus
 ```
 
 ### 6.2 POML テンプレート作成ガイドライン

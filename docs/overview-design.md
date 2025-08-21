@@ -39,9 +39,9 @@ CC-Deck v2 (Claude Code Development Platform v2)
 ├─────────────────────────────────────────────────────────────┤
 │  User Interface Layer                                      │
 │  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐         │
-│  │ CLI Commands│ │ Slash Cmds  │ │ Interactive │         │
-│  │ /project-   │ │ /spec-      │ │ Approval    │         │
-│  │ init        │ │ init        │ │ Workflow    │         │
+│  │ Unified     │ │ Natural     │ │ Interactive │         │
+│  │ Orchestrator│ │ Language    │ │ Approval    │         │
+│  │ /orchestrator│ │ Interface   │ │ Workflow    │         │
 │  └─────────────┘ └─────────────┘ └─────────────┘         │
 ├─────────────────────────────────────────────────────────────┤
 │  Workflow Engine Layer (POML + YAML Hybrid)               │
@@ -116,13 +116,20 @@ projects/{project-name}/
 
 ```
 poml/
-├── commands/                 # スラッシュコマンド用POMLテンプレート
-│   └── orchestrator.poml     # 統一コマンドオーケストレーター
-└── agents/                   # エージェント挙動制御用POMLテンプレート
-    ├── spec-generator.poml   # CES仕様生成挙動
-    ├── implementation.poml   # 実装エージェント挙動
-    ├── validation.poml       # テスト・検証挙動
-    └── security-review.poml  # セキュリティレビュー挙動
+├── commands/                          # オーケストレーター用POMLテンプレート
+│   └── orchestrator.poml              # 統一コマンドオーケストレーター（プロンプト解析・ルーティング）
+└── agents/                            # エージェント挙動制御用POMLテンプレート（既存ファイル）
+    ├── development-styles/
+    │   ├── rapid-prototyping.poml     # 高速プロトタイピング
+    │   ├── enterprise-development.poml# エンタープライズ開発
+    │   └── test-driven-development.poml# TDD重視開発
+    ├── review-styles/
+    │   ├── strict-security-review.poml# 厳格セキュリティレビュー
+    │   ├── performance-focused.poml   # パフォーマンス重視
+    │   └── code-quality-review.poml   # コード品質レビュー
+    └── testing-styles/
+        ├── comprehensive-testing.poml # 包括的テスト
+        └── unit-test-focused.poml     # ユニットテスト重視
 ```
 
 ## 4. 主要ワークフロー
@@ -139,7 +146,7 @@ Input: ユーザー要件/プロジェクトアイデア
 3. Task Breakdown (TDD実装計画)
 ↓
 Output: 完全な仕様 in specs/{project-name}/{feature-name}/
-Approval: 要件とデザインに人間レビュー必須
+Approval: requirements.md, design.md, tasks.md に人間承認必須
 ```
 
 ### 4.2 Implementation Workflow (IMPL)
@@ -157,6 +164,7 @@ Input: 承認済み仕様
 ↓
 Output: 動作する実装 in projects/{project-name}/src/
 Quality Gates: 95%+テストカバレッジ、lint準拠、型安全性
+Approval: 品質ゲート通過とセキュリティ審査完了後に進行可
 ```
 
 ### 4.3 Validation Workflow (VALID)
@@ -189,7 +197,15 @@ Approval: ステークホルダーサインオフ必須
 - **アクセシビリティ**: WCAG 2.1 AA 準拠
 - **セキュリティ**: 依存関係スキャン、シークレット検出
 
-### 5.3 統合要件
+### 5.3 承認制御要件
+
+- **spec.json状態管理**: 各フェーズの承認状況を正確に記録
+- **承認ゲート**: 未承認成果物での次フェーズ進行を自動ブロック
+- **承認コマンド**: `/orchestrator approve [type] for [project] [feature]`
+- **承認表示**: 成果物に承認要件と承認コマンドを明示
+- **制約実施**: orchestratorが承認状況を確認し、制約を実施
+
+### 5.4 統合要件
 
 - **MCP Servers**: Context7, DeepWiki, Brave Search
 - **Version Control**: Git workflows with automated quality checks

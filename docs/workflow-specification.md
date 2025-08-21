@@ -9,8 +9,10 @@ CC-Deck v2は、仕様、実装、評価に特化した次世代AI駆動型開�
 CC-Deck v2は従来のcc-deckとは異なり、**仕様、実装、評価に特化した開発プラットフォーム**として設計されています。新規プロジェクトの作成から継続的な開発まで、以下の基本原則に基づいてAI駆動の開発基盤を提供します：
 
 #### 核心的価値提案
-- **カスタムスラッシュコマンドの効果的活用**: 複雑なワークフローを簡潔なコマンドで実行
-- **サブエージェントによる専門的作業**: ドメイン特化したAIエージェントが高度な作業を自動化
+- **統一オーケストレーターによる自然言語インターフェース**: `/orchestrator`による直感的なワークフロー実行
+- **プロジェクトコンテキスト駆動**: spec.jsonによる状態管理とフェーズベース制御
+- **サブエージェントによる専門的作業**: ドメイン特化したClaude Code Sub-agentが高度な作業を自動化
+- **POML挙動制御**: 既存behavior.pomlテンプレートによる動的な実行挙動変更
 - **品質重視のドキュメント生成**: AI支援による高品質な仕様書、設計書、技術文書の作成
 - **テスト駆動開発の徹底**: 95%以上のカバレッジを目標とした堅牢なコード実装
 - **包括的テスト環境**: ユニット、統合、E2E、パフォーマンステストの完全自動化
@@ -141,20 +143,20 @@ workflow_states:
 
 ### サブフェーズ詳細
 
-#### 1. 初期化（spec-init）
-- **入力**: プロジェクト名、機能名
-- **処理**: ディレクトリ構造作成、初期ファイル生成
+#### 1. 仕様生成開始
+- **コマンド**: `/orchestrator create specification for [project] [feature]`
+- **処理**: プロジェクトコンテキスト確認、ディレクトリ構造作成、初期ファイル生成
 - **出力**: `specs/{feature-name}/`ディレクトリ構造
 - **所要時間**: 1-2分
-- **実行者**: システム（自動）
+- **実行者**: orchestrator → spec-generator sub-agent
 
-#### 2. 要求分析（spec-requirements）
-- **入力**: ユーザー要求、既存コードベース参照
-- **処理**: EARS+記法での要求定義、コンテキスト分析
+#### 2. 要求分析
+- **コマンド**: `/orchestrator generate requirements for [project] [feature]`
+- **処理**: EARS+記法での要求定義、コンテキスト分析、MCP研究統合
 - **出力**: `requirements.md`（構造化された要求仕様）
 - **承認**: 必須（ヒューマンレビュー）
 - **所要時間**: 15-30分
-- **実行者**: AI + ヒューマン承認
+- **実行者**: orchestrator → spec-generator sub-agent
 
 **EARS+記法例:**
 ```markdown
@@ -163,13 +165,13 @@ THE SYSTEM SHALL 認証情報を検証し
 AND 成功時はダッシュボードにリダイレクトする
 ```
 
-#### 3. 技術設計（spec-design）
-- **入力**: 承認済み要求仕様
+#### 3. 技術設計
+- **コマンド**: `/orchestrator design technical architecture for [project] [feature]`
 - **処理**: アーキテクチャ設計、技術選定、インターフェース定義
 - **出力**: `design.md`（技術設計書）
 - **承認**: 必須（ヒューマンレビュー）
 - **所要時間**: 20-45分
-- **実行者**: AI + ヒューマン承認
+- **実行者**: orchestrator → spec-generator sub-agent
 
 **設計書に含まれる要素:**
 - システムアーキテクチャ図
@@ -178,13 +180,13 @@ AND 成功時はダッシュボードにリダイレクトする
 - API仕様定義
 - セキュリティ考慮事項
 
-#### 4. タスク分解（spec-tasks）
-- **入力**: 承認済み設計書
+#### 4. タスク分解
+- **コマンド**: `/orchestrator generate implementation tasks for [project] [feature]`
 - **処理**: 実装タスクの詳細分解、TDDシナリオ作成
 - **出力**: `tasks.md`（実装タスクリスト）
 - **承認**: 必須（ヒューマンレビュー）
 - **所要時間**: 10-20分
-- **実行者**: AI + ヒューマン承認
+- **実行者**: orchestrator → spec-generator sub-agent
 
 **タスク例:**
 ```markdown
@@ -230,11 +232,11 @@ AND 成功時はダッシュボードにリダイレクトする
 ### サブフェーズ詳細
 
 #### 1. プロジェクトセットアップ
-- **入力**: 承認済み仕様一式
+- **コマンド**: `/orchestrator implement [project] [feature]`（初期化フェーズ）
 - **処理**: プロジェクト構造生成、依存関係設定
 - **出力**: 初期プロジェクト構造
 - **所要時間**: 5-10分
-- **実行者**: システム（自動）
+- **実行者**: orchestrator → implementation sub-agent
 
 **生成される構造例:**
 ```
@@ -247,11 +249,11 @@ project/
 ```
 
 #### 2. TDD実装サイクル
-- **入力**: タスクリスト、テストシナリオ
+- **コマンド**: `/orchestrator implement [project] [feature] using test-driven development`
 - **処理**: Red→Green→Refactorサイクルの反復
 - **出力**: テスト駆動による実装コード
 - **所要時間**: タスク数に依存（通常1-4時間）
-- **実行者**: AI（TDD専門エージェント）
+- **実行者**: orchestrator → implementation sub-agent (TDD behavior適用)
 
 **TDDサイクル:**
 1. **Red**: 失敗するテストを書く
@@ -264,11 +266,11 @@ project/
 - 型チェック合格
 
 #### 3. 統合
-- **入力**: 個別実装済みコンポーネント
+- **コマンド**: `/orchestrator integrate components for [project] [feature]`
 - **処理**: コンポーネント統合、API接続
 - **出力**: 統合済みアプリケーション
 - **所要時間**: 15-30分
-- **実行者**: AI（統合専門エージェント）
+- **実行者**: orchestrator → implementation sub-agent
 
 **統合作業内容:**
 - コンポーネント間の依存関係解決
@@ -277,11 +279,11 @@ project/
 - 環境変数の設定
 
 #### 4. ドキュメント生成
-- **入力**: 実装コード、仕様書
+- **コマンド**: `/orchestrator generate documentation for [project] [feature]`
 - **処理**: APIドキュメント、使用ガイド生成
 - **出力**: 完全なドキュメント
 - **所要時間**: 10-15分
-- **実行者**: AI（ドキュメント生成エージェント）
+- **実行者**: orchestrator → implementation sub-agent
 
 **生成されるドキュメント:**
 - API仕様書（OpenAPI/Swagger）
@@ -329,11 +331,11 @@ project/
 ### サブフェーズ詳細
 
 #### 1. ユニットテスト検証
-- **入力**: 実装コード、テストスイート
+- **コマンド**: `/orchestrator test [project] [feature] focusing on unit tests`
 - **処理**: 全ユニットテストの実行と検証
 - **出力**: テストレポート
 - **所要時間**: 2-5分
-- **実行者**: AI（テスト実行エージェント）
+- **実行者**: orchestrator → validation sub-agent
 
 **合格基準**: 
 - 全テスト合格（成功率100%）
@@ -341,11 +343,11 @@ project/
 - テスト実行時間5分以内
 
 #### 2. 統合テスト実行
-- **入力**: 統合済みシステム
+- **コマンド**: `/orchestrator test [project] [feature] with integration testing`
 - **処理**: APIエンドポイント、データフロー検証
 - **出力**: 統合テストレポート
 - **所要時間**: 5-10分
-- **実行者**: AI（統合テストエージェント）
+- **実行者**: orchestrator → validation sub-agent
 
 **合格基準**: 
 - 全APIエンドポイント正常動作
@@ -353,11 +355,11 @@ project/
 - 外部サービス連携正常
 
 #### 3. E2Eテスト実施
-- **入力**: 完全なアプリケーション
+- **コマンド**: `/orchestrator test [project] [feature] with end-to-end testing`
 - **処理**: ユーザージャーニーの自動検証
 - **出力**: E2Eテストレポート
 - **所要時間**: 10-20分
-- **実行者**: AI（E2Eテストエージェント）
+- **実行者**: orchestrator → validation sub-agent
 
 **合格基準**: 
 - クリティカルパス100%合格
@@ -365,11 +367,11 @@ project/
 - ブラウザ互換性確認
 
 #### 4. パフォーマンス検証
-- **入力**: 本番相当環境
+- **コマンド**: `/orchestrator test [project] [feature] with performance validation`
 - **処理**: 負荷テスト、レスポンス測定
 - **出力**: パフォーマンスレポート
 - **所要時間**: 15-30分
-- **実行者**: AI（パフォーマンステストエージェント）
+- **実行者**: orchestrator → validation sub-agent
 
 **合格基準**: 
 - レスポンス時間SLA達成
@@ -685,16 +687,52 @@ iteration_control:
 
 ## 承認メカニズム
 
+### spec.json承認状況管理
+```json
+{
+  "approvals": {
+    "requirements": {
+      "generated": true,
+      "approved": false  // 人間承認待ち
+    },
+    "design": {
+      "generated": true,
+      "approved": false  // 人間承認待ち
+    },
+    "tasks": {
+      "generated": false,
+      "approved": false
+    }
+  }
+}
+```
+
+### 人間承認必須の成果物
+
+#### Specificationフェーズ
+- **requirements.md**: EARS+要件定義 → `/orchestrator approve requirements for [project] [feature]`
+- **design.md**: 技術設計書 → `/orchestrator approve design for [project] [feature]`
+- **tasks.md**: 実装タスク分解 → `/orchestrator approve tasks for [project] [feature]`
+
+#### Implementationフェーズ
+- **品質ゲート通過**: 95%+テストカバレッジ、lint準拠、型安全性確認
+- **セキュリティ審査**: 脆弱性スキャン結果承認
+- **アーキテクチャ準拠**: 承認済み設計との整合性確認
+
+#### Validationフェーズ
+- **テスト結果承認**: 全テストスイート合格確認
+- **パフォーマンス承認**: 基準値クリア確認
+- **最終承認**: ステークホルダーサインオフ → `/orchestrator approve implementation for [project] [feature]`
+
 ### 自動承認条件
 - 軽微な変更（typo修正、ドキュメント更新）
 - 95%以上のテストカバレッジを維持する変更
 - セキュリティリスクがない変更
 
-### ヒューマン承認必須条件
-- アーキテクチャ変更
-- 外部API統合
-- セキュリティ関連実装
-- パフォーマンスクリティカルな変更
+### 承認ゲートの実行制約
+- 承認されていない仕様では実装フェーズに進行不可
+- 承認されていない設計では実装詳細作業に進行不可
+- 品質ゲートを通過していない実装では検証フェーズに進行不可
 
 ## 成功指標
 

@@ -152,13 +152,20 @@ CC-Deck v2では、各技術を適切な役割で組み合わせます：
 #### 3.2.1 POML Templates (`poml/`)
 ```
 poml/
-├── commands/                   # スラッシュコマンド用POMLテンプレート
-│   └── orchestrator.poml       # 統一コマンドオーケストレーター
-└── agents/                     # エージェント挙動制御用POMLテンプレート
-    ├── spec-generator.poml     # 仕様生成エージェント用挙動
-    ├── impl-agent.poml         # 実装エージェント用挙動
-    ├── valid-agent.poml        # 検証エージェント用挙動
-    └── security-review.poml    # セキュリティレビュー用挙動
+├── commands/                           # オーケストレーター用POMLテンプレート
+│   └── orchestrator.poml               # 統一コマンドオーケストレーター（プロンプト解析・ルーティング）
+└── agents/                             # エージェント挙動制御用POMLテンプレート（既存ファイル）
+    ├── development-styles/
+    │   ├── rapid-prototyping.poml      # 高速プロトタイピング
+    │   ├── enterprise-development.poml # エンタープライズ開発
+    │   └── test-driven-development.poml # TDD重視開発
+    ├── review-styles/
+    │   ├── strict-security-review.poml # 厳格セキュリティレビュー
+    │   ├── performance-focused.poml    # パフォーマンス重視
+    │   └── code-quality-review.poml    # コード品質レビュー
+    └── testing-styles/
+        ├── comprehensive-testing.poml  # 包括的テスト
+        └── unit-test-focused.poml      # ユニットテスト重視
 ```
 
 #### 3.2.2 Claude Code Sub-agents (`~/.claude/agents/` & `.claude/agents/`)
@@ -172,10 +179,13 @@ poml/
 ```
 
 #### 3.2.3 Orchestration Logic (メインClaudeコンテキスト)
-- スラッシュコマンドによるワークフロー開始
+- `/orchestrator`統一コマンドによるワークフロー開始
+- 自然言語プロンプト解析によるパラメータ抽出
+- プロジェクトコンテキスト管理と状態確認
 - 適切なサブエージェントの選択と呼び出し
-- エージェント間のコンテキスト管理
+- POML behavior templateの読み込みと適用指示
 - 結果の統合と品質保証
+- 次アクション提案と状態更新
 
 ## 4. 具体的な実装例
 
@@ -184,44 +194,76 @@ poml/
 **`poml/commands/orchestrator.poml`:**
 ```xml
 <poml>
-  <let name="project_name" value="{{PROJECT_NAME}}" />
-  <let name="feature_name" value="{{FEATURE_NAME}}" />
-  <let name="context_dir" value="projects/{{project_name}}/.workflow/context" />
+  <metadata>
+    <template-name>orchestrator</template-name>
+    <version>1.0.0</version>
+    <description>Unified command orchestrator for CC-Deck v2 slash commands</description>
+    <compatible-commands>all</compatible-commands>
+  </metadata>
+
+  <!-- プロンプト解析用変数 -->
+  <let name="user_prompt" value="{{USER_PROMPT}}" />
+  
+  <!-- 抽出されるパラメータ -->
+  <let name="command" value="" />
+  <let name="target" value="" />
+  <let name="behavior" value="" />
+  <let name="project" value="" />
+  <let name="feature" value="" />
 
   <role>
-    You are a specification generation expert for CC-Deck v2.
-    You specialize in creating EARS+ requirements and technical designs
-    using Claude Code Enhanced Specification (CES) methodology.
+    You are the orchestrator for CC-Deck v2 platform commands.
+    You coordinate between slash commands and specialized sub-agents
+    to execute complex development workflows.
   </role>
 
   <task>
-    Generate comprehensive technical specifications for feature "{{feature_name}}"
-    in project "{{project_name}}" following CES specification format.
+    1. First, analyze the user prompt: "{{user_prompt}}"
+    2. Extract parameters: command, target, behavior, project, feature
+    3. Route to appropriate sub-agent based on extracted command
+    4. Apply behavior template if identified
+    5. Execute the workflow with extracted parameters
   </task>
 
-  <context>
-    <document src="steering/coding-standards.md" />
-    <document src="projects/{{project_name}}/project.json" />
-    <document src="{{context_dir}}/previous-decisions.json" optional="true" />
-  </context>
-
-  <example>
-    Input: User authentication feature
-    Output: Complete specification including:
-    - EARS+ requirements with acceptance criteria
-    - Technical design with architecture decisions
-    - Implementation tasks with TDD approach
-    - Quality gates and success metrics
-  </example>
-
-  <output-format>
-    Create three files in CES format:
-    1. requirements.md (EARS+ syntax with context references)
-    2. design.md (technical architecture with diagrams)
-    3. tasks.md (TDD implementation breakdown)
+  <prompt-analysis>
+    **CRITICAL - Project Identification** (MUST be identified):
+    - Look for project names in the prompt
+    - If NO project found → ASK USER: "どのプロジェクトで作業しますか？"
     
-    All files must follow CC-Deck v2 quality standards.
-  </output-format>
+    **Command Identification**:
+    - If contains "review", "check", "analyze", "audit" → command = "review"
+    - If contains "implement", "create", "build", "develop" → command = "implement"
+    - If contains "specification", "spec", "requirement", "design" → command = "spec"
+    - If contains "continue", "next", "proceed" → check spec.json for next action
+    - If contains "approve" → command = "approve"
+    
+    **Behavior Identification**:
+    - If contains "security", "strict", "audit" → behavior = "strict-security-review"
+    - If contains "rapid", "prototype", "quick", "fast" → behavior = "rapid-prototyping"
+    - If contains "enterprise", "production", "robust" → behavior = "enterprise-development"
+  </prompt-analysis>
+
+  <command-routing>
+    <p if="command == 'review'">
+      Route to code-reviewer sub-agent for code analysis.
+    </p>
+    
+    <p if="command == 'implement'">
+      Check if design is approved in spec.json
+      If approved → Route to implementation sub-agent
+    </p>
+    
+    <p if="command == 'spec'">
+      Route to spec-generator sub-agent for specification.
+    </p>
+  </command-routing>
+
+  <behavior-integration>
+    <p if="behavior">
+      Load behavior template: poml/agents/{{behavior}}.poml
+      Apply behavioral modifications to the selected sub-agent
+    </p>
+  </behavior-integration>
 </poml>
 ```
 
@@ -277,32 +319,37 @@ Always ensure specifications are implementable, testable, and aligned with CC-De
 
 **Main Claude Code Context での実行例:**
 ```
-User: /spec-init my-project user-authentication
+User: /orchestrator create specification for my-project user-authentication
 
 Claude (Orchestrator):
-1. Task Analysis:
-   - Specification generation required for user-authentication feature
-   - Project context: my-project
-   - Phase: Initial specification creation
+1. Natural Language Analysis (orchestrator.poml):
+   - Extract project: "my-project"
+   - Extract command: "spec" (create specification)
+   - Extract feature: "user-authentication"
+   - Extract behavior: none (default behavior)
 
-2. Context Preparation:
-   - Load POML template: spec-agent-prompt.poml
-   - Inject variables: PROJECT_NAME=my-project, FEATURE_NAME=user-authentication
-   - Prepare project context and steering documents
+2. Project Context Loading:
+   - Load projects/my-project/project.json
+   - Load projects/my-project/specs/user-authentication/spec.json (if exists)
+   - Validate current phase and constraints
 
-3. Sub-agent Invocation:
+3. Sub-agent Selection & Routing:
+   - Select spec-generator sub-agent based on "spec" command
+   - Prepare agent invocation with extracted parameters
+
+4. Sub-agent Invocation:
    > Use the spec-generator subagent to create comprehensive specifications
    > for user-authentication feature in my-project
+   > No behavior template specified - use default CES methodology
 
-4. Result Integration:
+5. Result Integration:
    - Validate generated specifications against CES standards
-   - Update project state: spec.json
-   - Prepare for approval workflow
+   - Update project state: spec.json (phase = "requirements-generated")
+   - Record completion status
 
-5. Next Steps Suggestion:
+6. Next Steps Suggestion:
    - Review generated requirements.md for accuracy
-   - Approve specifications before proceeding to design phase
-   - Use /approve-requirements command when ready
+   - Use /orchestrator approve requirements for my-project user-authentication when ready
 ```
 
 ## 5. 重要な実装原則

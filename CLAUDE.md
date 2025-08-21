@@ -268,94 +268,84 @@ Leveraging existing patterns from #[[file:components/ui/button.tsx]]...
 - `notification-system` - Notification system
 - `reporting-dashboard` - Reporting dashboard
 
-#### Command Usage Examples
+#### Orchestrator Command Usage Examples
 ```bash
-# Project setup
-/project-init example-project
+# 統一オーケストレーターコマンド
+/orchestrator [自然言語指示]
 
 # Specification workflow (CES)
-/spec-init example-project example-feature
-/spec-requirements example-project example-feature
-/spec-design example-project example-feature
-/spec-tasks example-project example-feature
+/orchestrator create specification for example-project example-feature
+/orchestrator generate requirements for example-project example-feature  
+/orchestrator design technical architecture for example-project example-feature
+/orchestrator generate implementation tasks for example-project example-feature
 
 # Approval workflow
-/approve-requirements example-project example-feature
-/approve-design example-project example-feature
+/orchestrator approve requirements for example-project example-feature
+/orchestrator approve design for example-project example-feature
 
 # Implementation workflow
-/implement example-project example-feature
-/test example-project example-feature
-/create-pr example-project example-feature
+/orchestrator implement example-project example-feature
+/orchestrator test example-project example-feature with comprehensive coverage
+/orchestrator create pull request for example-project example-feature
+
+# Continuation workflow
+/orchestrator continue example-project
+/orchestrator review authentication module with security focus
 ```
 
 ## Development Commands
 
-### CES Slash Commands (Enhanced from gotalab/claude-code-spec)
+### 統一オーケストレーター (Unified Orchestrator)
 
-#### Steering Commands
+CC-Deck v2では、すべてのワークフローを統一された`/orchestrator`コマンドで実行します。
+
+#### 基本コマンド形式
 ```bash
-# Initialize project steering documents
-/steering-init
-
-# Update steering after project changes  
-/steering-update
-
-# Create custom steering for specialized contexts
-/steering-custom
-```
-
-#### Project Management Commands
-```bash
-# Initialize new project with default structure
-/project-init [project-name]
-
-# List all projects and their status
-/project-list
-
-# Switch active project context
-/project-switch [project-name]
+# 統一エントリーポイント
+/orchestrator [自然言語指示]
 ```
 
 #### Specification Commands (CES - Claude Code Enhanced Specification System)
 ```bash
-# Initialize specification with Claude Code context awareness
-/spec-init [project-name] [feature-name]
+# 仕様生成（プロジェクト・フィーチャー自動識別またはプロンプト）
+/orchestrator create specification for [project-name] [feature-name]
+/orchestrator generate requirements for [project-name] [feature-name]
+/orchestrator design technical architecture for [project-name] [feature-name]
+/orchestrator generate implementation tasks for [project-name] [feature-name]
 
-# Generate EARS+ requirements with live file references
-/spec-requirements [project-name] [feature-name]
-
-# Create AI-enhanced technical design
-/spec-design [project-name] [feature-name]
-
-# Generate implementation tasks
-/spec-tasks [project-name] [feature-name]
-
-# Check specification progress
-/spec-status [project-name] [feature-name]
+# 進捗確認
+/orchestrator check specification status for [project-name] [feature-name]
 ```
 
 #### Approval Management Commands
 ```bash
-# Approve specification phase progression
-/approve-requirements [project-name] [feature-name]
-/approve-design [project-name] [feature-name]
-/approve-tasks [project-name] [feature-name]
+# 承認ワークフロー（フェーズ進行制御）
+/orchestrator approve requirements for [project-name] [feature-name]
+/orchestrator approve design for [project-name] [feature-name]
+/orchestrator approve tasks for [project-name] [feature-name]
 ```
 
 #### Implementation & Workflow Commands
 ```bash
-# Execute implementation workflow
-/implement [project-name] [feature-name]
+# 実装ワークフロー（POML behavior自動適用）
+/orchestrator implement [project-name] [feature-name]
+/orchestrator implement [project-name] [feature-name] using rapid prototyping
 
-# Run testing workflow
-/test [project-name] [feature-name]
+# テスト実行（挙動指定可能）
+/orchestrator test [project-name] [feature-name]
+/orchestrator test [project-name] [feature-name] with comprehensive coverage
 
-# Create pull request
-/create-pr [project-name] [feature-name]
+# レビュー実行（behavior自動識別）
+/orchestrator review [target] with security focus
+/orchestrator review authentication module with strict security analysis
 
-# Platform dashboard
-/dashboard [project-name]
+# 継続ワークフロー（フェーズベース自動判定）
+/orchestrator continue [project-name]
+/orchestrator continue [project-name] [feature-name]
+
+# プロジェクト管理
+/orchestrator show status for [project-name]
+/orchestrator list all projects
 ```
 
 ### Quality Assurance

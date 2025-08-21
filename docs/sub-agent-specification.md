@@ -2,7 +2,7 @@
 
 ## 概要
 
-CC-Deck v2におけるサブエージェントは、**専門領域に特化した実行ユニット**として機能し、オーケストレーターからの指示に基づいて具体的なタスクを実行します。Anthropic仕様に完全準拠し、Task()ツールを使用せず、与えられたコンテキストで自律的に作業を完了する責務を持ちます。
+CC-Deck v2におけるサブエージェントは、**専門領域に特化した実行ユニット**として機能し、orchestratorから指示を受けて具体的なタスクを実行します。Claude Code Sub-agent仕様に完全準拠し、Task()ツールを使用せず、orchestratorから渡されたコンテキストとPOML behaviorテンプレートに基づいて自律的に作業を完了する責務を持ちます。
 
 ## 基本設計原則
 
@@ -11,456 +11,210 @@ CC-Deck v2におけるサブエージェントは、**専門領域に特化し�
 - **自律実行**: 与えられたコンテキストで完全なタスク実行
 - **結果責任**: 品質基準を満たす成果物の生成
 
-### 2. **Anthropic仕様準拠**
-- **Task()禁止**: 他のエージェントを呼び出さない
-- **ツール制限**: 必要最小限のツールセットのみ使用
-- **独立性**: オーケストレーター以外との直接通信なし
+### 2. **Claude Code仕様準拠**
+- **Task()禁止**: 他のエージェントを呼び出さない（Anthropic仕様）
+- **ツール制限**: 専門領域に必要な最小限のツールセットのみ使用
+- **独立性**: orchestrator以外との直接通信なし
+- **POML behavior統合**: 既存behavior.pomlテンプレートの読み込みと適用
 
 ### 3. **品質重視の実行**
 - **標準遵守**: 組織・プロジェクトの品質基準に準拠
 - **検証責任**: 自身の出力品質を自己検証
 - **改善志向**: フィードバックに基づく継続的品質向上
 
-## エージェント分類と責務
+## 現在のサブエージェント構成
 
-### A. 仕様系エージェント (Specification Agents)
+CC-Deck v2では、簡潔で効果的な設計として、**必要最小限のコアサブエージェント**を提供します。
 
-#### A1. spec-creation-expert
-**専門領域**: 要求分析、仕様設計、技術文書作成
+### Core Sub-agents
 
-```typescript
-interface SpecificationAgent {
-  // 要求分析と仕様抽出
-  analyzeRequirements(input: UserInput): RequirementsAnalysis
-  
-  // 技術仕様の設計
-  designTechnicalSpecification(requirements: Requirements): TechnicalSpec
-  
-  // 実装タスクの分解
-  breakdownImplementationTasks(spec: TechnicalSpec): TaskBreakdown
-  
-  // 受け入れ基準の定義
-  defineAcceptanceCriteria(spec: TechnicalSpec): AcceptanceCriteria
-}
-```
+#### 1. spec-generator
+**専門領域**: CES（Claude Code Enhanced Specification）仕様生成
+**ファイルパス**: `.claude/agents/spec-generator.md`
 
-**具体的責務**:
-- **要求分析**: ユーザー入力から機能要件・非機能要件を抽出
+**責務**:
+- **要求分析**: ユーザー入力からEARS+記法での要件抽出
 - **技術設計**: アーキテクチャ、データモデル、API設計の作成
-- **文書生成**: requirements.md, technical-design.md, tasks.md の生成
-- **品質保証**: EARS+記法、設計原則への準拠確認
+- **タスク分解**: TDD実装タスクの詳細分解
+- **品質保証**: CES仕様標準への準拠確認
+
+**POML behavior統合**:
+- デフォルト: 標準CES仕様生成
+- `enterprise-development.poml`: エンタープライズ品質重視
+- `rapid-prototyping.poml`: 高速プロトタイピング重視
 
 **成果物**:
 ```
-specs/
-├── requirements.md         # 機能・非機能要件
-├── technical-design.md     # 技術設計・アーキテクチャ
-├── tasks.md               # 実装タスク分解
-└── acceptance-tests.md    # 受け入れテスト仕様
+specs/{feature-name}/
+├── spec.json              # 状態管理
+├── requirements.md        # EARS+要件定義
+├── design.md             # AI支援技術設計
+├── tasks.md              # 実装タスク分解
+└── context.md            # 機能固有コンテキスト
 ```
 
-**品質基準**:
-- **完全性**: 実装に必要なすべての情報を含む
-- **明確性**: 曖昧さのない具体的な記述
-- **実装可能性**: 技術的に実現可能な設計
-- **テスタビリティ**: 検証可能な受け入れ基準
+#### 2. code-reviewer
+**専門領域**: コードレビュー、品質分析、セキュリティ監査
+**ファイルパス**: `.claude/agents/code-reviewer.md`
 
-#### A2. requirements-analyst
-**専門領域**: 要求工学、ステークホルダー分析、要件管理
+**責務**:
+- **コード品質分析**: 可読性、保守性、パフォーマンスの確認
+- **セキュリティ監査**: 脆弱性検出、セキュリティベストプラクティス確認
+- **標準準拠**: コーディング規約、アーキテクチャ原則への準拠確認
+- **改善提案**: 具体的な修正提案と実装例の提供
 
-```typescript
-interface RequirementsAnalyst {
-  // ステークホルダー分析
-  analyzeStakeholders(context: ProjectContext): StakeholderAnalysis
-  
-  // 要求の優先順位付け
-  prioritizeRequirements(requirements: Requirement[]): PrioritizedRequirements
-  
-  // 要求の依存関係分析
-  analyzeDependencies(requirements: Requirement[]): DependencyGraph
-  
-  // 要求の変更管理
-  manageRequirementsChange(changes: RequiementChange[]): ChangeImpactAnalysis
-}
-```
+**POML behavior統合**:
+- デフォルト: 標準コード品質レビュー
+- `strict-security-review.poml`: セキュリティ重視の厳格監査
+- `performance-focused.poml`: パフォーマンス最適化重視
+- `code-quality-review.poml`: コード品質・保守性重視
 
-### B. 実装系エージェント (Implementation Agents)
+#### 3. implementation
+**専門領域**: TDD実装、コード生成、統合
+**ファイルパス**: `.claude/agents/implementation.md`
 
-#### B1. impl-agent (TDD Implementation)
-**専門領域**: テスト駆動開発、コード実装、品質保証
+**責務**:
+- **TDD実装**: Red→Green→Refactorサイクルでの実装
+- **プロジェクト構造**: 言語別テンプレートでの構造生成
+- **依存関係管理**: パッケージ管理、設定ファイル生成
+- **統合作業**: コンポーネント統合、API接続
 
-```typescript
-interface ImplementationAgent {
-  // テスト仕様からテストコード生成
-  generateTestCode(acceptance: AcceptanceCriteria): TestCode
-  
-  // TDDサイクルでの実装
-  implementWithTDD(tests: TestCode, design: TechnicalSpec): Implementation
-  
-  // コード品質検証
-  verifyCodeQuality(code: Implementation): QualityReport
-  
-  // 統合とデプロイ準備
-  prepareIntegration(implementation: Implementation): IntegrationPackage
-}
-```
+**POML behavior統合**:
+- デフォルト: 標準TDD実装
+- `rapid-prototyping.poml`: 高速プロトタイピング
+- `enterprise-development.poml`: エンタープライズ品質実装
+- `test-driven-development.poml`: TDD厳格遵守
 
-**具体的責務**:
-- **テスト先行開発**: 受け入れ基準からテストコード生成
-- **実装**: 設計仕様に基づく機能実装
-- **品質検証**: 静的解析、カバレッジ測定、セキュリティチェック
-- **文書化**: コード内ドキュメント、API仕様の生成
+#### 4. validation
+**専門領域**: テスト実行、品質検証、パフォーマンス測定
+**ファイルパス**: `.claude/agents/validation.md`
 
-**成果物**:
-```
-src/
-├── main.py                # メイン実装コード
-├── models/               # データモデル
-├── services/             # ビジネスロジック
-├── api/                  # API エンドポイント
-tests/
-├── unit/                 # ユニットテスト
-├── integration/          # 統合テスト
-└── e2e/                  # E2Eテスト
-```
+**責務**:
+- **テスト実行**: ユニット、統合、E2Eテストの実行
+- **品質測定**: カバレッジ、品質指標の測定
+- **パフォーマンステスト**: 負荷テスト、レスポンス測定
+- **検証レポート**: 包括的な検証結果レポート生成
 
-**品質基準**:
-- **テストカバレッジ**: 95%以上
-- **静的解析**: リンタエラーゼロ
-- **セキュリティ**: 脆弱性スキャン合格
-- **パフォーマンス**: 設計仕様の性能要件達成
+**POML behavior統合**:
+- デフォルト: 標準品質検証
+- `comprehensive-testing.poml`: 包括的テスト実行
+- `unit-test-focused.poml`: ユニットテスト重視
+- `performance-validation.poml`: パフォーマンス検証重視
 
-#### B2. frontend-specialist
-**専門領域**: UI/UX実装、フロントエンド技術、アクセシビリティ
+## POML Behavior統合仕様
 
-```typescript
-interface FrontendSpecialist {
-  // UI コンポーネント設計・実装
-  implementUIComponents(design: UIDesign): ComponentImplementation
-  
-  // ユーザー体験最適化
-  optimizeUserExperience(components: Component[]): UXOptimization
-  
-  // アクセシビリティ対応
-  ensureAccessibility(implementation: FrontendCode): AccessibilityReport
-  
-  // パフォーマンス最適化
-  optimizePerformance(app: FrontendApplication): PerformanceOptimization
-}
-```
+### 基本統合パターン
 
-### C. 検証系エージェント (Validation Agents)
+すべてのサブエージェントは以下のパターンでPOML behaviorを統合します：
 
-#### C1. test-automation-expert
-**専門領域**: テスト自動化、品質保証、継続的インテグレーション
-
-```typescript
-interface TestAutomationExpert {
-  // テスト戦略の設計
-  designTestStrategy(requirements: Requirements): TestStrategy
-  
-  // 自動テストスイートの構築
-  buildAutomatedTestSuite(strategy: TestStrategy): TestSuite
-  
-  // CI/CDパイプラインの設計
-  designCICDPipeline(project: ProjectConfig): PipelineDefinition
-  
-  // テスト結果分析とレポート
-  analyzeTestResults(results: TestResults): QualityReport
-}
-```
-
-**具体的責務**:
-- **テスト計画**: ユニット、統合、E2E、パフォーマンステストの計画
-- **自動化**: テスト実行の完全自動化
-- **CI/CD統合**: 継続的インテグレーション・デプロイメントの設定
-- **品質監視**: テスト結果の継続的監視とレポート
-
-#### C2. security-auditor
-**専門領域**: セキュリティ監査、脆弱性検査、セキュア実装検証
-
-```typescript
-interface SecurityAuditor {
-  // セキュリティ要件の検証
-  auditSecurityRequirements(spec: SecuritySpec): SecurityAudit
-  
-  // 脆弱性スキャンと分析
-  performVulnerabilityAssessment(code: Implementation): VulnerabilityReport
-  
-  // セキュア実装ガイドライン適用
-  enforceSecurityStandards(implementation: Implementation): ComplianceReport
-  
-  // セキュリティテストの実行
-  executeSecurityTests(application: Application): SecurityTestResults
-}
-```
-
-## 共通インターフェース仕様
-
-### 入力インターフェース
-```typescript
-interface AgentInput {
-  // オーケストレーターからの指示
-  instruction: AgentInstruction
-  
-  // プロジェクトコンテキスト
-  projectContext: ProjectContext
-  
-  // 前段階からの成果物
-  previousArtifacts: Artifact[]
-  
-  // 品質要件・制約
-  qualityRequirements: QualityStandards
-}
-
-interface AgentInstruction {
-  taskType: TaskType
-  priority: Priority
-  deadline?: Timestamp
-  specificRequirements: Requirement[]
-}
-```
-
-### 出力インターフェース
-```typescript
-interface AgentOutput {
-  // 実行ステータス
-  status: ExecutionStatus
-  
-  // 生成された成果物
-  artifacts: GeneratedArtifact[]
-  
-  // 品質メトリクス
-  qualityMetrics: QualityMetrics
-  
-  // 次段階への引き継ぎ情報
-  handoffContext: HandoffContext
-  
-  // 実行ログとメタデータ
-  executionLog: ExecutionLog
-}
-
-interface GeneratedArtifact {
-  type: ArtifactType
-  path: FilePath
-  content: string
-  metadata: ArtifactMetadata
-  qualityScore: QualityScore
-}
-```
-
-### エラーハンドリング
-```typescript
-interface AgentError {
-  // エラーの分類
-  errorType: ErrorType
-  
-  // エラーの詳細
-  errorDetails: ErrorDetails
-  
-  // 推奨復旧アクション
-  recoveryActions: RecoveryAction[]
-  
-  // 部分的成果物（可能な場合）
-  partialResults?: PartialArtifact[]
-}
-```
-
-## 品質保証メカニズム
-
-### A. 自己検証責務
-各サブエージェントは自身の出力品質を検証する責務を持ちます。
-
-```typescript
-interface SelfValidation {
-  // 成果物の完全性検証
-  validateCompleteness(artifacts: Artifact[]): CompletenessReport
-  
-  // 品質基準への準拠確認
-  validateQualityStandards(output: AgentOutput): StandardsComplianceReport
-  
-  // 一貫性チェック
-  validateConsistency(artifacts: Artifact[]): ConsistencyReport
-  
-  // 実装可能性検証（仕様系エージェント）
-  validateImplementability(specification: Specification): ImplementabilityReport
-}
-```
-
-### B. 相互検証メカニズム
-```typescript
-interface CrossValidation {
-  // 前段階成果物との整合性確認
-  validateAlignmentWithPrevious(current: Artifact[], previous: Artifact[]): AlignmentReport
-  
-  // 要件トレーサビリティ確認
-  validateRequirementTraceability(implementation: Implementation, requirements: Requirements): TraceabilityReport
-  
-  // アーキテクチャ準拠確認
-  validateArchitecturalCompliance(code: Implementation, architecture: Architecture): ComplianceReport
-}
-```
-
-## パフォーマンス要件
-
-### 実行時間要件
-- **仕様系エージェント**: 15分以内での仕様生成完了
-- **実装系エージェント**: 1時間以内でのMVP実装完了
-- **検証系エージェント**: 30分以内での全テスト実行完了
-
-### 品質要件
-- **正確性**: 95%以上の要件実装率
-- **完全性**: 100%の必須成果物生成
-- **一貫性**: ゼロの論理矛盾
-- **保守性**: 90%以上のコード品質スコア
-
-### リソース使用量
-- **メモリ**: 4GB以内での実行
-- **CPU**: 並列実行時の適切な負荷分散
-- **ストレージ**: 効率的な一時ファイル管理
-
-## 継続的改善メカニズム
-
-### A. 学習データ収集
-```typescript
-interface LearningDataCollection {
-  // 実行パフォーマンスデータ
-  collectPerformanceMetrics(execution: AgentExecution): PerformanceData
-  
-  // 品質改善データ
-  collectQualityImprovements(before: Artifact[], after: Artifact[]): ImprovementData
-  
-  // エラーパターンデータ
-  collectErrorPatterns(errors: AgentError[]): ErrorPatternData
-  
-  // 成功事例データ
-  collectSuccessPatterns(successes: SuccessfulExecution[]): SuccessPatternData
-}
-```
-
-### B. 能力向上メカニズム
-```typescript
-interface CapabilityImprovement {
-  // プロンプト最適化
-  optimizePromptEffectiveness(feedback: QualityFeedback): PromptOptimization
-  
-  // 品質基準の更新
-  updateQualityStandards(learnings: QualityLearning[]): StandardsUpdate
-  
-  // エラー防止策の強化
-  strengthenErrorPrevention(patterns: ErrorPattern[]): PreventionStrategy
-  
-  // 効率性改善
-  improveExecutionEfficiency(metrics: PerformanceMetrics[]): EfficiencyImprovement
-}
-```
-
-## 実装ガイドライン
-
-### A. エージェント開発標準
-
-#### 1. ファイル構造
-```
-.claude/agents/
-├── {domain}/
-│   ├── {agent-name}.md              # エージェント定義
-│   ├── {agent-name}-prompts/        # プロンプトテンプレート
-│   │   ├── base-prompt.md          # 基本プロンプト
-│   │   ├── quality-checklist.md   # 品質チェックリスト
-│   │   └── error-handling.md      # エラー処理ガイド
-│   └── {agent-name}-examples/      # 実行例とテストケース
-```
-
-#### 2. エージェント定義テンプレート
 ```markdown
----
-name: {agent-name}
-description: {specific-responsibility-description}
-domain: {specification|implementation|validation}
-tools: [Read, Write, Edit, LS]  # 必要最小限のみ
-quality_standards: {applicable-standards}
----
+## Process
+1. Always load POML behavior template if provided: poml/agents/{behavior}.poml
+2. Apply behavior modifications from POML
+3. Execute tasks based on POML priorities and constraints
+4. Generate output in POML-specified format
 
-# {Agent Name}
+## Default Behavior (if no POML)
+- 標準的な専門領域の処理を実行
+- 基本的な品質基準を適用
+- 汎用的な出力フォーマットを使用
 
-## Specialized Responsibility
-[Single, clear responsibility definition]
-
-## Input Requirements
-[Expected input format and validation]
-
-## Output Specifications  
-[Required output format and quality criteria]
-
-## Quality Assurance
-[Self-validation procedures]
-
-## Error Handling
-[Error detection and recovery procedures]
+## POML Integration
+When behavior template is provided:
+- Follow POML priorities exactly
+- Apply POML constraints strictly  
+- Use POML-defined approach
+- Generate POML-specified output format
 ```
 
-#### 3. 品質基準適用
-- **コード規約**: 組織標準への準拠
-- **文書規約**: 統一されたフォーマット
-- **命名規約**: 一貫した命名パターン
-- **バージョン管理**: 成果物のバージョン追跡
+### Behavior Template適用方法
 
-### B. 統合テスト要件
+1. **Orchestratorからの指示**: どのbehavior.pomlを読み込むかを指定
+2. **ファイル読み込み**: 指定されたPOMLファイルの内容を解析
+3. **挙動修正**: 優先順位、制約、アプローチを実際の処理に適用
+4. **出力調整**: POML指定のフォーマットで結果を生成
 
-#### 1. 単体テスト
-```typescript
-interface AgentUnitTest {
-  // 正常系実行テスト
-  testNormalExecution(input: ValidInput): TestResult
-  
-  // 異常系実行テスト  
-  testErrorHandling(input: InvalidInput): ErrorHandlingResult
-  
-  // 品質基準遵守テスト
-  testQualityCompliance(output: AgentOutput): ComplianceResult
-  
-  // パフォーマンステスト
-  testPerformanceRequirements(workload: TestWorkload): PerformanceResult
-}
+## サブエージェント実行例
+
+### code-reviewer での strict-security-review 適用例
+
+```markdown
+Input from Orchestrator:
+> Use the code-reviewer subagent to review authentication module
+> for fintech-app project with strict-security-review behavior applied
+> Load: poml/agents/review-styles/strict-security-review.poml
+
+Process:
+1. Load strict-security-review.poml
+2. Apply security-focused priorities
+3. Execute security audit with zero-tolerance constraints
+4. Generate security audit report format
+
+Output:
+## セキュリティ監査レポート
+プロジェクト: fintech-app
+挙動: strict-security-review
+
+### 検出された問題
+🔴 Critical (2件): SQL injection, Weak password hashing
+🟡 High (3件): Missing rate limiting, Session issues, CSRF protection
+
+### 推奨事項
+1. bcrypt 12ラウンド以上実装
+2. Rate limiting 実装
+3. CSRF token 実装
+
+### 次のアクション
+/orchestrator implement security fixes for fintech-app user-auth
 ```
 
-#### 2. 統合テスト
-```typescript
-interface AgentIntegrationTest {
-  // オーケストレーター連携テスト
-  testOrchestratorIntegration(scenario: IntegrationScenario): IntegrationResult
-  
-  // エージェント間データ受け渡しテスト
-  testDataHandoff(fromAgent: Agent, toAgent: Agent): HandoffResult
-  
-  // ワークフロー全体テスト
-  testEndToEndWorkflow(workflow: WorkflowDefinition): E2EResult
-}
-```
+## 品質基準
 
-## 拡張と将来性
+### 全サブエージェント共通
+- **Claude Code仕様準拠**: Task()ツール使用禁止
+- **独立実行**: orchestrator以外との通信なし
+- **POML統合**: behavior templateの正確な適用
+- **品質責任**: 出力品質の自己検証
+- **承認対応**: 人間承認が必要な成果物の明確な識別
 
-### A. 新エージェント追加プロセス
-1. **領域分析**: 新しい専門領域の特定
-2. **責務定義**: 明確な責務境界の設定
-3. **インターフェース設計**: 標準インターフェースへの準拠
-4. **品質基準設定**: ドメイン固有の品質要件
-5. **統合テスト**: 既存システムとの統合確認
+### エージェント固有品質基準
 
-### B. エージェント進化戦略
-- **能力拡張**: 新技術・フレームワークへの対応
-- **品質向上**: 継続的な出力品質の改善
-- **効率化**: 実行速度とリソース使用量の最適化
-- **インテリジェンス**: より高度な判断能力の獲得
+#### spec-generator
+- **EARS+記法準拠**: 検証可能な要件記述
+- **実装可能性**: 技術的実現性の確認
+- **承認対象成果物**: requirements.md, design.md, tasks.md
+- **承認前確認**: 完全性、一貫性、実装可能性の自己検証
 
-### C. エコシステム統合
-- **外部ツール連携**: IDE、CI/CD、監視ツールとの統合
-- **業界標準準拠**: 各種業界標準・規格への対応
-- **企業カスタマイズ**: 組織固有の要件への適応
+#### code-reviewer  
+- **セキュリティ基準**: 脆弱性の包括的検出
+- **コード品質標準**: 保守性、可読性、パフォーマンス基準
+- **承認推奨**: 重大な問題発見時の実装承認保留提案
+
+#### implementation
+- **95%+テストカバレッジ**: 品質ゲート必須
+- **TDD遵守**: Red-Green-Refactorサイクル実行
+- **品質ゲート通過**: lint、型チェック、セキュリティスキャン合格
+
+#### validation
+- **包括的テスト実行**: ユニット、統合、E2E、パフォーマンステスト
+- **品質指標測定**: カバレッジ、性能、セキュリティ指標
+- **最終承認準備**: ステークホルダー承認のための検証結果整理
+
+## 将来の拡張
+
+### 追加予定エージェント
+- **deployment**: デプロイメント、CI/CD管理
+- **documentation**: 技術文書、API仕様生成
+- **architect**: アーキテクチャ設計、技術選定
+
+### 拡張性確保
+- 新しいbehavior.pomlテンプレートの追加対応
+- 多言語プロジェクトサポート
+- カスタムツールセット対応
 
 ---
 
 **文書バージョン**: 1.0.0  
 **作成日**: 2025-01-17  
 **ステータス**: 設計承認待ち  
-**関連文書**: orchestrator-specification.md, hybrid-agent-architecture.md
+**関連文書**: orchestrator-specification.md, workflow-specification.md

@@ -77,130 +77,93 @@ Maintains evolution of context over time in JSONL format:
 
 ### 2. POML Context Bridging System
 
-#### Context Bridge Agent
-```poml
-<agent name="context-bridge">
-  <role>Workflow context transition coordinator</role>
-  <task>Extract, validate, and transfer context between workflow phases</task>
-  
-  <context>
-    <source-workflow>{{ previous.workflow.name }}</source-workflow>
-    <target-workflow>{{ next.workflow.name }}</target-workflow>
-    <project>{{ project.name }}</project>
-    <feature>{{ feature.name }}</feature>
-  </context>
-  
-  <tools>
-    <tool>Read</tool>
-    <tool>Write</tool>
-    <tool>Grep</tool>
-  </tools>
-  
-  <workflow>
-    <step name="extract-context">
-      <extract-decisions>
-        <from>{{ source.workflow.outputs }}</from>
-        <filter>{{ extraction.decision_criteria }}</filter>
-      </extract-decisions>
-      
-      <extract-constraints>
-        <technical>{{ source.technical_constraints }}</technical>
-        <business>{{ source.business_requirements }}</business>
-        <quality>{{ source.quality_gates }}</quality>
-      </extract-constraints>
-      
-      <extract-artifacts>
-        <documents>{{ source.documents }}</documents>
-        <code>{{ source.code_references }}</code>
-        <tests>{{ source.test_specifications }}</tests>
-      </extract-artifacts>
-    </step>
-    
-    <step name="validate-context">
-      <quality-check>
-        <completeness>{{ context.completeness_score }}</completeness>
-        <consistency>{{ context.consistency_score }}</consistency>
-        <relevance>{{ context.relevance_score }}</relevance>
-      </quality-check>
-      
-      <if condition="{{ context.quality_score }} < 0.8">
-        <enhance-context>
-          <additional-extraction>{{ enhancement.strategies }}</additional-extraction>
-          <context-synthesis>{{ missing.information }}</context-synthesis>
-        </enhance-context>
-      </if>
-    </step>
-    
-    <step name="transfer-context">
-      <prepare-injection>
-        <format-for-target>{{ target.workflow.requirements }}</format-for-target>
-        <prioritize-information>{{ relevance.ranking }}</prioritize-information>
-      </prepare-injection>
-      
-      <inject-context>
-        <into-claude-md>{{ enhanced.claude_md_section }}</into-claude-md>
-        <into-state-file>{{ context.state_json }}</into-state-file>
-        <into-cache>{{ context.artifacts_cache }}</into-cache>
-      </inject-context>
-    </step>
-  </workflow>
-</agent>
-```
-
 #### Context Bridge Template
 ```poml
-<context-bridge name="spec-to-impl">
-  <source>specification</source>
-  <target>implementation</target>
+<poml>
+  <role>Workflow context transition coordinator responsible for extracting, validating, and transferring context between workflow phases</role>
   
-  <extraction-rules>
-    <decisions>
-      <extract>architecture_choices</extract>
-      <extract>technology_selections</extract>
-      <extract>design_patterns</extract>
-    </decisions>
-    
-    <constraints>
-      <extract>performance_requirements</extract>
-      <extract>security_requirements</extract>
-      <extract>compliance_requirements</extract>
-    </constraints>
-    
-    <artifacts>
-      <extract>api_specifications</extract>
-      <extract>data_models</extract>
-      <extract>interface_definitions</extract>
-    </artifacts>
-  </extraction-rules>
+  <task>
+    Extract critical information from completed workflow phase and prepare it for injection into the next workflow phase.
+    Ensure all key decisions, constraints, and artifacts are preserved and properly formatted.
+  </task>
   
-  <injection-template>
-    <summary>
-      Previous workflow ({{ source }}) completed successfully.
-      
-      Key Architectural Decisions:
-      <for decision="decision in extracted.decisions">
-        - {{ decision.title }}: {{ decision.decision }}
-          Rationale: {{ decision.rationale }}
-      </for>
-      
-      Technical Constraints:
-      <for constraint="constraint in extracted.constraints">
-        - {{ constraint.type }}: {{ constraint.description }}
-      </for>
-      
-      Required Artifacts:
-      <for artifact="artifact in extracted.artifacts">
-        - {{ artifact.name }} ({{ artifact.type }})
-      </for>
-      
-      Implementation Priorities:
-      1. Maintain consistency with approved architecture
-      2. Satisfy all technical constraints
-      3. Implement comprehensive testing strategy
-      4. Follow established code quality standards
-    </summary>
-  </injection-template>
-</context-bridge>
+  <document src="projects/{{project}}/specs/{{feature}}/spec.json" />
+  <document src="projects/{{project}}/specs/{{feature}}/requirements.md" />
+  <document src="projects/{{project}}/specs/{{feature}}/design.md" />
+  
+  <example>
+    Input from specification phase:
+    - Architecture decision: Microservices with REST APIs
+    - Security requirement: JWT authentication + HTTPS
+    - Performance target: < 200ms response time
+    
+    Output for implementation phase:
+    - Project structure: services/auth, services/api
+    - Dependencies: express@4, jsonwebtoken@9, helmet@7
+    - Test scenarios: auth flow, API endpoints, performance
+  </example>
+  
+  <output-format>
+    Generate structured context summary for CLAUDE.md injection:
+    
+    ## Context from Previous Workflow ({{previous_phase}})
+    **Key Decisions Made:**
+    - [List critical architectural and technical decisions with rationale]
+    
+    **Technical Constraints:**
+    - [List performance, security, compliance requirements]
+    
+    **Implementation Requirements:**
+    - [List specific implementation tasks and dependencies]
+    
+    **File References:**
+    - [List relevant specification files and documentation]
+  </output-format>
+</poml>
+```
+
+#### Spec-to-Implementation Context Bridge
+```poml
+<poml>
+  <role>Context bridge for specification-to-implementation workflow transition</role>
+  
+  <task>
+    Transform approved specification context into actionable implementation context.
+    Extract key decisions, constraints, and requirements from specification phase.
+    Format information for implementation team consumption.
+  </task>
+  
+  <document src="projects/{{project}}/specs/{{feature}}/spec.json" />
+  <document src="projects/{{project}}/specs/{{feature}}/requirements.md" />
+  <document src="projects/{{project}}/specs/{{feature}}/design.md" />
+  <document src="projects/{{project}}/specs/{{feature}}/tasks.md" />
+  
+  <example>
+    Specification context extraction:
+    {
+      "architecture_decisions": ["microservices", "event-driven"],
+      "technology_stack": ["Node.js", "PostgreSQL", "Redis"],
+      "security_requirements": ["OAuth2", "data encryption"],
+      "performance_targets": {"response_time": "200ms", "throughput": "1000 req/s"}
+    }
+    
+    Implementation context injection:
+    {
+      "project_structure": ["services/auth", "services/api", "shared/models"],
+      "dependencies": ["express", "passport", "bcrypt", "pg"],
+      "test_scenarios": ["auth flow", "API endpoints", "load testing"],
+      "deployment_config": ["docker", "kubernetes", "helm"]
+    }
+  </example>
+  
+  <output-format>
+    Provide structured implementation context:
+    - Map architectural decisions to project structure
+    - Convert technology choices to specific dependencies and versions
+    - Transform requirements into test scenarios and acceptance criteria
+    - Include deployment and infrastructure considerations
+  </output-format>
+</poml>
 ```
 
 ### 3. Enhanced CLAUDE.md Integration
@@ -346,3 +309,66 @@ CLAUDE.md is enhanced with a dynamic context section that gets updated automatic
 - **Access Control**: Role-based context visibility
 - **Backup/Recovery**: Context state backup and restoration
 - **Analytics**: Context quality and usage analytics
+- **Approval Integration**: Human approval status tracking and workflow control
+
+## Approval Context Management
+
+### Approval-Aware Context Bridging
+The context persistence system integrates approval status tracking to ensure proper workflow control:
+
+```json
+{
+  "context_state": {
+    "approval_dependencies": [
+      {
+        "phase": "specification",
+        "deliverable": "requirements.md",
+        "approval_status": "pending",
+        "required_for": "implementation_start"
+      },
+      {
+        "phase": "specification", 
+        "deliverable": "design.md",
+        "approval_status": "approved",
+        "approved_by": "tech_lead",
+        "approved_at": "2025-01-16T14:30:00Z"
+      }
+    ],
+    "blocked_transitions": [
+      {
+        "from_phase": "specification",
+        "to_phase": "implementation", 
+        "reason": "requirements approval pending"
+      }
+    ]
+  }
+}
+```
+
+### Context Bridge with Approval Gates
+```poml
+<poml>
+  <role>Context bridge with approval gate validation</role>
+  
+  <task>
+    Transfer context between workflow phases while enforcing approval gates.
+    Ensure no unapproved deliverables proceed to next phase.
+  </task>
+  
+  <document src="projects/{{project}}/specs/{{feature}}/spec.json" />
+  
+  <example>
+    If requirements.md is not approved:
+    - Block transition to implementation phase
+    - Include approval reminder in context
+    - Suggest approval command: "/orchestrator approve requirements for {{project}} {{feature}}"
+  </example>
+  
+  <output-format>
+    Include approval status in all context transfers:
+    - List approved deliverables and their approval timestamps
+    - Identify pending approvals blocking workflow progression
+    - Provide specific approval commands for blocked items
+  </output-format>
+</poml>
+```

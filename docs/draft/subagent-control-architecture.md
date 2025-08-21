@@ -9,57 +9,52 @@
 - エージェント間の直接的な連携
 - 分散型のワークフロー制御
 
-## 解決アプローチ：中央オーケストレーター方式
+## 解決アプローチ：統一オーケストレーター方式（現在のアーキテクチャ）
 
-### 基本原則
+### 現在の実装済み基本原則
 ```
-オーケストレーター（Task()使用可）
-    ├── Specエージェント
-    ├── Implエージェント  
-    └── Validエージェント
+/orchestrator (統一自然言語インターフェース)
+    ├── spec-generator (CES仕様生成)
+    ├── code-reviewer (品質分析・セキュリティ監査)
+    ├── implementation (TDD実装・統合)
+    └── validation (テスト実行・品質検証)
 ```
 
-**全てのエージェント呼び出しはオーケストレーター経由**
+**現在のアーキテクチャ**: 全コマンドが`/orchestrator`経由で実行、自然言語プロンプト解析によるルーティング
 
-### 実装パターン
+### 現在の実装パターン（統一orchestrator）
 
 ```typescript
-// オーケストレーター内部
-async function orchestrate(project: string, feature: string) {
-  const state = loadState(project, feature);
-  
-  // 状態に基づくエージェント選択
-  const agent = determineAgent(state);
-  
-  // Task()ツールでエージェント呼び出し
-  const result = await callTask(agent, {
-    prompt: generatePrompt(state),
-    context: loadContext(state)
-  });
-  
-  // 結果保存と状態更新
-  saveResult(result);
-  updateState(state, result);
-}
+// 現在の統一orchestrator実行フロー
+/orchestrator [natural language instruction]
+  ↓
+1. プロンプト解析: ExtractParameters(prompt) → {project, command, behavior, feature}
+2. プロジェクト確認: IdentifyProject() → プロジェクトコンテキスト読み込み
+3. 状態検証: ValidatePhaseStatus() → spec.json確認
+4. ルーティング: SelectSubAgent(command) → 適切なsub-agent選択
+5. behavior適用: LoadBehaviorTemplate(behavior) → POML読み込み（該当時）
+6. 実行: InvokeSubAgent() → Task()でsub-agent呼び出し
+7. 統合: IntegrateResults() → 結果統合、状態更新、次アクション提案
 ```
 
 ## エージェント間のコンテキスト共有
 
-### ファイルベース共有（Anthropic推奨）
+### 現在のファイルベース共有（spec.json状態管理）
 ```
-.workflow/
-├── state.json           # 現在の実行状態
-└── results/
-    ├── spec-001.json    # Specエージェント結果
-    ├── impl-001.json    # Implエージェント結果
-    └── valid-001.json   # Validエージェント結果
+projects/{project-name}/specs/{feature-name}/
+├── spec.json                    # 状態管理（フェーズ、承認、進捗）
+├── requirements.md              # EARS+要件定義
+├── design.md                   # AI支援技術設計
+├── tasks.md                    # 実装タスク分解
+├── context.md                  # 機能固有コンテキスト
+└── workflow.poml               # POML-based AIワークフロー定義
 ```
 
-### コンテキスト受け渡しフロー
-1. エージェントA実行 → 結果をファイル保存
-2. オーケストレーターが次のエージェントB決定
-3. エージェントBへ前の結果ファイルパスを渡す
-4. エージェントBがファイル読み込みでコンテキスト取得
+### 現在のコンテキスト受け渡しフロー（spec.json中心）
+1. **orchestrator**: spec.json読み込み → 現在フェーズと状態確認
+2. **sub-agent実行**: 指定されたエージェントでタスク実行
+3. **結果統合**: sub-agent結果をファイル保存 + spec.json状態更新
+4. **次フェーズ準備**: 次のworkflow phaseへのコンテキスト継承
 
 ## 並列実行の考慮
 
@@ -100,34 +95,37 @@ async function callAgentWithRetry(agent: string, task: any) {
 - 失敗時は前のスナップショットから復旧
 - 部分的成功の結果は保持
 
-## 実装優先順位
+## 現在の実装状況と今後の優先順位
 
-### Phase 1: 最小実装
-1. 単一オーケストレーター作成
-2. 順次実行のみサポート
-3. 基本的なエラーハンドリング
+### ✅ 実装済み（Phase 1完了）
+1. **統一orchestrator**: `/orchestrator`による自然言語インターフェース
+2. **4コアsub-agent**: spec-generator, code-reviewer, implementation, validation
+3. **spec.json状態管理**: フェーズ、承認、進捗の永続化
+4. **基本エラーハンドリング**: プロンプト解析失敗時の対話的確認
 
-### Phase 2: 状態管理強化
-1. 状態永続化メカニズム
-2. コンテキスト受け渡し最適化
-3. リトライメカニズム
+### 🔄 進行中（Phase 2）
+1. **POML behavior統合**: 既存behavior.pomlテンプレートとsub-agentの連携
+2. **コンテキスト永続化**: State-Driven Context Persistence architecture
+3. **品質ゲート**: spec.json承認フローの実装
 
-### Phase 3: 高度な制御
-1. 条件分岐ロジック
-2. 品質ゲート統合
-3. 監視・ログ強化
+### 📋 今後の計画（Phase 3）
+1. **高度なプロンプト解析**: より柔軟な自然言語理解
+2. **複数プロジェクト並列**: プロジェクト横断的な状態管理
+3. **エンタープライズ機能**: 監視、分析、セキュリティ強化
 
 ## 技術的判断
 
-### 採用すべき
-- **中央オーケストレーター**: Anthropic仕様準拠の唯一の方法
-- **ファイルベースコンテキスト**: シンプルで確実
+### ✅ 採用済み（現在のアーキテクチャ）
+- **統一orchestrator**: Anthropic仕様準拠、自然言語インターフェース
+- **spec.json状態管理**: シンプルで確実なプロジェクト状態永続化
 - **順次実行**: 複雑性を避け、デバッグ容易
+- **POML behavior制御**: 既存ファイルによる動的挙動変更
 
-### 避けるべき
-- **エージェント間直接通信**: 仕様違反
+### ❌ 避けるべき（設計で排除済み）
+- **エージェント間直接通信**: 仕様違反（Task()ツール制限）
 - **複雑な並列制御**: Task()ツールの制約で非効率
-- **メモリベース共有**: 永続性とデバッグ性に難
+- **メモリベース共有**: 永続性とデバッグ性に問題
+- **個別スラッシュコマンド**: `/orchestrator`統一により廃止
 
 ## リスクと対策
 
@@ -139,18 +137,28 @@ async function callAgentWithRetry(agent: string, task: any) {
 
 ## 結論
 
-**推奨アーキテクチャ**: 中央オーケストレーター + ファイルベースコンテキスト共有
+**現在のアーキテクチャ**: 統一orchestrator + spec.json状態管理 + POML behavior制御
 
-この方式により：
-- Anthropic仕様完全準拠
-- シンプルで理解しやすい制御フロー
-- デバッグとメンテナンスが容易
-- 段階的な機能拡張が可能
+### 実装済みの成果
+- **Anthropic仕様完全準拠**: Task()ツール制限に対応した設計
+- **統一インターフェース**: `/orchestrator`による直感的な操作
+- **柔軟な挙動制御**: 既存behavior.pomlによる動的制御
+- **確実な状態管理**: spec.jsonによるプロジェクト状態永続化
 
-**次のステップ**: プロトタイプ実装による検証
+### アーキテクチャの検証結果
+✅ **成功している点**:
+- Task()制約を回避した中央制御
+- 自然言語による直感的なインターフェース  
+- ファイルベースの確実なコンテキスト共有
+- POML仕様準拠による標準化
+
+✅ **今後の発展方向**:
+- State-Driven Context Persistenceによるワークフロー間連携強化
+- より多くのbehavior.pomlテンプレート追加
+- エンタープライズ機能（監視、分析）の実装
 
 ---
 
 **文書バージョン**: 2.0.0  
 **作成日**: 2025-01-17  
-**ステータス**: 検討中
+**ステータス**: 実装済み・検証完了

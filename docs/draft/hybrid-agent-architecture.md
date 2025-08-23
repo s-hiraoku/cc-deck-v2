@@ -319,14 +319,32 @@ Task(subagent_type="code-reviewer",
      behavior_template="strict-security-review.poml")
 ```
 
-### 3. 実装時の考慮事項
+### 3. pomljsライブラリの役割と制限
 
-#### POML制約への対応
-- **変数展開制限**: 複雑なスクリプティングではなく、シンプルな変数置換のみ
+#### 実際の機能範囲
+- ✅ **POML → テキスト変換**: `read()` + `write()` または `poml()`で可能
+- ❌ **テキスト → POML変換**: サポートなし（テキストはプレーンテキストとして処理）
+- ✅ **POML構文解析**: POMLマークアップの構造化処理
+
+#### CC-Deck v2での実装方針
+```javascript
+// POMLファイルからプロンプトテキスト生成のみ使用
+import { poml } from 'pomljs';
+
+// behavior.pomlを読み込み、プロンプトテキストに変換
+const behaviorText = await poml(behaviorPomlContent);
+// Claude Codeがこのテキストをsub-agentに提供
+```
+
+### 4. 実装時の考慮事項
+
+#### POML処理の制限事項
+- **単方向変換のみ**: POML → テキストのみサポート
+- **変数展開制限**: シンプルな変数置換のみ
 - **条件分岐簡素化**: 基本的なif条件のみサポート
 - **ファイル参照**: 相対パスでの外部ファイル参照
 
-### 4. 現在の実装方針との整合
+### 5. 現在の実装方針との整合
 
 CC-Deck v2では、以下の方針で統合アーキテクチャを実装：
 

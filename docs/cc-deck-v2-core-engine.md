@@ -6,63 +6,64 @@ CC-Deck v2は、「時間のかかる開発ワークフローを単一コマン�
 
 ### 基本構成
 
-CC-Deck v2のコアエンジンは、**5つのファイル**と**1つの統一コマンド**、**5つの専門エージェント**で構成されています：
+CC-Deck v2のコアエンジンは、**5つのファイル**と**3層のコマンド体系**で構成されています：
 
 **ファイル構成**：
 - **POML** 3種類：command.poml（コマンド制御）、agent.poml（エージェント定義）、context.poml（コンテキスト管理）
 - **TOML** 2種類：project.toml（プロジェクト設定）、state.toml（状態管理）
 
-**実行環境**：
-- **統一コマンド**：`/orchestrator [自然言語指示]`
-- **専門エージェント**：spec-generator → environment-setup → implementation → code-reviewer → validation
+**3層コマンド体系**：
+- **第1層 Orchestrator**：`/orchestrator [自然言語指示]` - 統合コマンド
+- **第2層 カスタムスラッシュコマンド**：5つの専門コマンド（spec-generator、environment-setup、implementation、code-reviewer、validation）
+- **第3層 サブエージェント**：各コマンドが呼び出す細分化されたタスク実行エージェント
 
 ### 設計思想
 
-各ファイルが**単一責務**を持ち、**概念的に明確**な役割分担により、複雑な開発ワークフローを自動化します。Orchestratorが適切なファイルを読み込み、専門エージェントを選択して、段階的にプロジェクトを進行させます。
+各ファイルが**単一責務**を持ち、**3層のコマンド体系**により段階的な制御が可能です。Orchestratorからカスタムスラッシュコマンドを呼び出し、さらにサブエージェントがタスクを実行する階層構造で、複雑な開発ワークフローを自動化します。
 
 ### 全体フロー
 
 ```mermaid
-graph TB
-    User[User] --> Cmd[orchestrator command]
+graph TD
+    User[User]
     
-    subgraph Orchestrator
-        Cmd --> Process[command.poml load & process]
-        Process --> LoadFiles[load files]
-        LoadFiles --> Select[select agent]
+    User --> Orch
+    
+    subgraph Layer1["      Layer 1: Orchestrator      "]
+        Orch[orchestrator command]
+        Orch --> Process[command.poml processing]
+        Process --> Select[select custom command]
     end
     
-    subgraph Files
-        ProjectToml[project.toml]
-        StateToml[state.toml]
-        ContextPoml[context.poml]
-        AgentPoml[agent.poml]
+    subgraph Layer2[Layer 2: Custom Commands]
+        direction LR
+        Cmd1[spec-generator]
+        Cmd2[environment-setup]
+        Cmd3[implementation]
+        Cmd4[code-reviewer]
+        Cmd5[validation]
     end
     
-    subgraph Agents
-        Spec[spec-generator]
-        Env[environment-setup]
-        Impl[implementation]
-        Review[code-reviewer]
-        Valid[validation]
+    Select --> Cmd1
+    Select --> Cmd2
+    Select --> Cmd3
+    Select --> Cmd4
+    Select --> Cmd5
+    
+    subgraph Layer3[Layer 3: Sub-Agents]
+        direction LR
+        A1[requirements-analyzer<br/>design-architect<br/>task-decomposer]
+        A2[project-initializer<br/>dependency-manager<br/>config-generator]
+        A3[code-generator<br/>test-writer<br/>documentation-writer]
+        A4[security-auditor<br/>quality-checker<br/>approval-recommender]
+        A5[e2e-tester<br/>performance-analyzer<br/>release-preparer]
     end
     
-    LoadFiles --> ProjectToml
-    LoadFiles --> StateToml
-    LoadFiles --> ContextPoml
-    Select --> AgentPoml
-    
-    AgentPoml --> Spec
-    Spec --> Env
-    Env --> Impl
-    Impl --> Review
-    Review --> Valid
-    
-    Valid --> StateUpdate[update state.toml]
-    Valid --> ContextUpdate[update context.poml]
-    
-    StateUpdate --> NextPhase[next phase]
-    ContextUpdate --> NextPhase
+    Cmd1 --> A1
+    Cmd2 --> A2
+    Cmd3 --> A3
+    Cmd4 --> A4
+    Cmd5 --> A5
 ```
 
 ---
@@ -165,70 +166,81 @@ design = 100
 implementation = 45
 ```
 
-## Orchestratorコマンド
+## 3層コマンド体系
 
-Orchestratorは統一されたエントリーポイントとして、自然言語コマンドを解析し適切なサブエージェントを選択します。
+### 第1層: Orchestratorコマンド
 
-### コマンド形式
+Orchestratorは統一されたエントリーポイントとして、自然言語コマンドを解析し適切なカスタムスラッシュコマンドを選択します。
+
+#### コマンド形式
 ```bash
 /orchestrator [自然言語指示]
 ```
 
-
-### 読み込みファイル
-
-#### Orchestrator
+#### 読み込みファイル
 - **command.poml** - コマンド解析ルール
 - **project.toml** - プロジェクト設定
 - **state.toml** - 現在の状態・フェーズ
 - **context.poml** - 前回のコンテキスト情報
-- **agent.poml** - 選択されたエージェント定義
 
-## サブエージェント
+### 第2層: カスタムスラッシュコマンド
 
-CC-Deck v2では5つの専門サブエージェントが協調してワークフローを実行します。
+5つの専門カスタムスラッシュコマンドが、Orchestratorから呼び出されるか、直接実行されます。
 
-### 5つの専門エージェント
+#### 5つのカスタムスラッシュコマンド
 
-#### 1. spec-generator - 仕様生成
-- **専門領域**: 要件分析、技術設計、タスク分解
-- **入力**: ユーザー要求、プロジェクト設定
-- **出力**: requirements.md, design.md, tasks.md
-- **agent.poml例**: enterprise-agent.poml, rapid-prototyping-agent.poml
+##### 1. /spec-generator - 仕様生成
+- **役割**: 要件分析、技術設計、タスク分解の統括
+- **呼び出すサブエージェント**:
+  - requirements-analyzer（要件分析）
+  - design-architect（設計）
+  - task-decomposer（タスク分解）
 
-#### 2. environment-setup - 開発環境構築
-- **専門領域**: プロジェクト初期化、依存関係管理、開発環境設定
-- **入力**: 承認済み仕様、技術スタック情報
-- **出力**: プロジェクト構造、設定ファイル、開発環境
-- **agent.poml例**: docker-based-agent.poml, cloud-native-agent.poml
+##### 2. /environment-setup - 開発環境構築
+- **役割**: プロジェクト初期化と環境設定の統括
+- **呼び出すサブエージェント**:
+  - project-initializer（プロジェクト初期化）
+  - dependency-manager（依存関係管理）
+  - config-generator（設定ファイル生成）
 
-#### 3. implementation - 実装
-- **専門領域**: TDD実装、品質ゲート、統合作業
-- **入力**: 承認済み仕様、プロジェクト構造
-- **出力**: 実装コード、テストコード、ドキュメント
-- **agent.poml例**: tdd-focused-agent.poml, performance-focused-agent.poml
+##### 3. /implementation - 実装
+- **役割**: コード実装とテスト作成の統括
+- **呼び出すサブエージェント**:
+  - code-generator（コード生成）
+  - test-writer（テスト作成）
+  - documentation-writer（ドキュメント作成）
 
-#### 4. code-reviewer - コードレビュー
-- **専門領域**: セキュリティ監査、品質分析、承認推奨
-- **入力**: 実装されたコード、テストコード
-- **出力**: レビュー結果、改善提案、承認可否判定
-- **agent.poml例**: security-focused-agent.poml, quality-focused-agent.poml
+##### 4. /code-reviewer - コードレビュー
+- **役割**: コード品質とセキュリティ監査の統括
+- **呼び出すサブエージェント**:
+  - security-auditor（セキュリティ監査）
+  - quality-checker（品質チェック）
+  - approval-recommender（承認推奨）
 
-#### 5. validation - 検証
-- **専門領域**: E2Eテスト、パフォーマンス測定、最終承認準備
-- **入力**: 実装済みコード、テスト結果
-- **出力**: 検証レポート、パフォーマンス分析、リリース準備
-- **agent.poml例**: comprehensive-testing-agent.poml, performance-validation-agent.poml
+##### 5. /validation - 検証
+- **役割**: テストとリリース準備の統括
+- **呼び出すサブエージェント**:
+  - e2e-tester（E2Eテスト）
+  - performance-analyzer（パフォーマンス分析）
+  - release-preparer（リリース準備）
 
-### 読み込みファイル
-
-#### サブエージェント
-- **agent.poml** - 挙動制御テンプレート
-- **context.poml** - 前フェーズのコンテキスト情報（プロジェクト設定含む）
+#### 読み込みファイル
+- **command.poml** - コマンド制御（カスタムコマンド用）
+- **project.toml** - プロジェクト設定
 - **state.toml** - 現在状態
+- **context.poml** - コンテキスト情報
 
-### 更新ファイル
-
-#### サブエージェント完了時
+#### 更新ファイル（カスタムコマンド完了時）
 - **state.toml** - 実行結果と進捗を更新
-- **context.poml** - 次フェーズ用コンテキスト情報を更新
+- **context.poml** - 次のカスタムコマンド用コンテキスト情報を更新
+
+### 第3層: サブエージェント
+
+各カスタムスラッシュコマンドが呼び出す、細分化されたタスクを実行する専門エージェントです。サブエージェントは状態管理を意識せず、与えられたタスクの実行に集中します。
+
+#### 読み込みファイル
+- **agent.poml** - エージェント定義（挙動制御）
+- タスク実行に必要な情報はカスタムコマンドから渡される
+
+#### 更新ファイル
+- なし（結果はカスタムコマンドに返却）

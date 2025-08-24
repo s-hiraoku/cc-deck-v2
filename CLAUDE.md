@@ -542,6 +542,68 @@ Enhanced specification patterns from Kiro's proven methodology:
 - **Progressive Specification**: Iterative refinement with AI-assisted requirement evolution
 - **Agent Hooks**: Automated task execution triggered by file changes or manual activation
 
+# Development Commands
+
+## Essential Commands
+
+### POML Processing
+```bash
+# Convert POML file to text format
+node -e "import {poml} from 'pomljs'; import fs from 'fs/promises'; const content = await fs.readFile('path/to/file.poml', 'utf8'); console.log(await poml(content));"
+
+# Install pomljs (already available)
+npm install pomljs
+```
+
+### 3-Layer Architecture Implementation
+
+**Critical Implementation Pattern**: 
+```bash
+# CORRECT: Read markdown files and execute directly
+# Layer 1 (Orchestrator) reads Layer 2 (Command) markdown files
+# Layer 2 (Commands) call Layer 3 (Sub-agents) via Task tool
+
+# INCORRECT: Never use claude -p for command execution
+# claude -p "/namespace:command-name" # ❌ Output doesn't display in Terminal
+```
+
+### Workflow Namespace Organization
+- `development`: Development workflow components
+- `testing`: Test execution and validation workflows  
+- `deployment`: Release and deployment workflows
+- `code-review`: Code quality and security review workflows
+- `spec-generation`: Requirements and design specification workflows
+
+## Architecture Implementation Rules
+
+### Layer Execution Pattern
+1. **Layer 1 (Orchestrator)**: Uses `Read` tool to load Layer 2 markdown files, executes instructions directly
+2. **Layer 2 (Commands)**: Uses `Read` tool to load POML files, uses `Task` tool to call Layer 3 sub-agents
+3. **Layer 3 (Sub-agents)**: Registered in `.claude/agents/` with POML behavior files in `poml/agents/`
+
+### Critical Constraints
+- ❌ **Never use Task tool for custom slash commands** - Commands are markdown files, not sub-agents
+- ❌ **Never use claude -p for internal command execution** - Output is not visible in Terminal
+- ✅ **Always read markdown files directly and execute their instructions**
+- ✅ **Sub-agents only callable via Task tool**
+
+### File Structure Compliance
+```
+.claude/
+├── commands/{namespace}/           # Layer 1 & 2 command definitions
+└── agents/{namespace}/            # Layer 3 sub-agent definitions
+
+poml/
+├── commands/{namespace}/          # Command behavior POML files
+├── agents/{namespace}/           # Sub-agent behavior POML files  
+└── context/{namespace}/          # Context management POML files
+```
+
+### Responsibility Separation
+- **Orchestrator**: File paths, execution order only - NO implementation details
+- **Commands**: Domain-specific processing, sub-agent selection only  
+- **Sub-agents**: Concrete task execution only
+
 # important-instruction-reminders
 Do what has been asked; nothing more, nothing less.
 NEVER create files unless they're absolutely necessary for achieving your goal.

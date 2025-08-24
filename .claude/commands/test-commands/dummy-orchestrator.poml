@@ -1,26 +1,63 @@
 <poml>
-  <role>テスト用のダミーオーケストレーター</role>
+  <role>テスト用のダミーオーケストレーター - CC-Deck v2 3層アーキテクチャ検証</role>
   
   <task>
-    2つのキャラクターコマンドを順次実行してテストを行う：
+    CC-Deck v2の3層アーキテクチャを検証するため、2つのキャラクターコマンドのマークダウンファイルを順次読み込んで実行する：
     <list>
-      <item>command-zundamonを呼び出してずんだもんに話させる</item>
-      <item>command-rum-chanを呼び出してラムちゃんに話させる</item>
+      <item>`.claude/commands/test-commands/command-zundamon.md`を読み込んで、その指示に従って実行</item>
+      <item>`.claude/commands/test-commands/command-rum-chan.md`を読み込んで、その指示に従って実行</item>
+      <item>両方の実行結果を統合してTerminalに表示</item>
     </list>
   </task>
   
-  <p>利用可能なコマンド：</p>
-  <list>
-    <item><b>command-zundamon</b> - ずんだもんのサブエージェントを呼び出すコマンド</item>
-    <item><b>command-rum-chan</b> - ラムちゃんのサブエージェントを呼び出すコマンド</item>
-  </list>
-  
   <p>実行手順：</p>
   <list>
-    <item>command-zundamonを実行</item>
-    <item>command-rum-chanを実行</item>
-    <item>両方の結果を統合して表示</item>
+    <item>1. `.claude/commands/test-commands/command-zundamon.md`を読み込んで、その内容を直接実行する</item>
+    <item>2. `.claude/commands/test-commands/command-rum-chan.md`を読み込んで、その内容を直接実行する</item>
+    <item>3. 実行結果を表示</item>
   </list>
   
-  <p>期待される出力：両方のキャラクターからの応答を含む統合された結果を返す</p>
+  <p>重要：読み込んだマークダウンファイルの内容は、Taskツールで実行してはいけません。ファイルの内容を読み取って、その指示に従って直接実行してください。</p>
+  
+  <p>期待される結果：両方のコマンドが正常に実行され、結果が表示される</p>
+  
+  <output-format>
+    ## 🎯 CC-Deck v2 3層アーキテクチャ検証結果
+    
+    ### 📋 実行サマリー
+    - Layer 1: Dummy Orchestrator (統合コマンド)
+    - Layer 2: Character Commands (キャラクターコマンド)
+    - Layer 3: Specialized Sub-Agents (専門サブエージェント)
+    
+    ### 🟢 Zundamon Command 実行結果
+    #### zundamon-greeter サブエージェント出力:
+    ```
+    [サブエージェントの完全な出力をここに詳細表示]
+    ```
+    
+    #### zundamon-storyteller サブエージェント出力:
+    ```
+    [サブエージェントの完全な出力をここに詳細表示]
+    ```
+    
+    ### 🟡 Rum-chan Command 実行結果
+    #### rum-greeter サブエージェント出力:
+    ```
+    [サブエージェントの完全な出力をここに詳細表示]
+    ```
+    
+    #### rum-emotion サブエージェント出力:
+    ```
+    [サブエージェントの完全な出力をここに詳細表示]
+    ```
+    
+    ### ✅ アーキテクチャ検証結果
+    | Layer | 機能 | 状態 | 実行サブエージェント数 |
+    |-------|------|------|----------------------|
+    | Layer 1 | Orchestrator | ✅ 正常 | - |
+    | Layer 2 | Commands | ✅ 正常 | 2コマンド |
+    | Layer 3 | Sub-Agents | ✅ 正常 | 4エージェント |
+    
+    **総合結果: CC-Deck v2の3層アーキテクチャが完全に機能していることを確認**
+  </output-format>
 </poml>

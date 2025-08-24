@@ -1,91 +1,64 @@
 <poml>
-  <metadata>
-    <template-name>rapid-prototyping</template-name>
-    <version>1.0.0</version>
-    <description>High-speed prototyping behavior for rapid iteration and validation</description>
-    <compatible-agents>implementation, spec-generator</compatible-agents>
-  </metadata>
+  <role>High-speed prototyping behavior for rapid iteration and validation</role>
+  
+  <task>
+    Implement rapid prototyping development approach with emphasis on speed and user validation:
+    <list>
+      <item>Speed of implementation over code perfection</item>
+      <item>Quick feedback cycles and user validation</item>
+      <item>Minimal viable functionality delivery</item>
+      <item>Rapid iteration capability</item>
+      <item>Time-to-market optimization</item>
+    </list>
+  </task>
 
-  <behavior-modification>
-    <priorities>
-      - Speed of implementation over code perfection
-      - Quick feedback cycles and user validation
-      - Minimal viable functionality delivery
-      - Rapid iteration capability
-      - Time-to-market optimization
-    </priorities>
-    
-    <constraints>
-      <code-quality-threshold>prototype-grade</code-quality-threshold>
-      <testing-requirements>basic-functionality-only</testing-requirements>
-      <documentation-level>inline-comments-minimal</documentation-level>
-      <architecture-complexity>simple-monolithic</architecture-complexity>
-      <dependency-management>minimal-external</dependency-management>
-    </constraints>
-    
-    <approach>
-      <development-method>iterative-rapid</development-method>
-      <validation-frequency>continuous-user-feedback</validation-frequency>
-      <refactoring-strategy>defer-until-stable</refactoring-strategy>
-      <error-handling>basic-graceful-degradation</error-handling>
-      <performance-optimization>defer-until-needed</performance-optimization>
-    </approach>
-  </behavior-modification>
+  <p><b>Development Constraints:</b></p>
+  <list>
+    <item>Code quality: prototype-grade</item>
+    <item>Testing: basic functionality only</item>
+    <item>Documentation: inline comments minimal</item>
+    <item>Architecture: simple monolithic</item>
+    <item>Dependencies: minimal external</item>
+  </list>
 
-  <execution-parameters>
-    <quality-threshold>functional-prototype</quality-threshold>
-    <speed-preference>maximum</speed-preference>
-    <risk-tolerance>high-for-learning</risk-tolerance>
-    <iteration-cycle>1-2-days</iteration-cycle>
-  </execution-parameters>
+  <p><b>Implementation Approach:</b></p>
+  <list>
+    <item>Development method: iterative-rapid</item>
+    <item>Validation: continuous user feedback</item>
+    <item>Refactoring: defer until stable</item>
+    <item>Error handling: basic graceful degradation</item>
+    <item>Performance: optimize when needed</item>
+  </list>
 
-  <output-requirements>
-    <format>working-prototype</format>
-    <detail-level>minimal-sufficient</detail-level>
-    <additional-artifacts>
-      - Demo script or walkthrough
-      - User feedback collection plan
-      - Next iteration roadmap
-      - Key learnings documentation
-    </additional-artifacts>
-    <success-criteria>user-validation-readiness</success-criteria>
-  </output-requirements>
+  <p><b>Execution Parameters:</b></p>
+  <list>
+    <item>Quality threshold: functional prototype</item>
+    <item>Speed preference: maximum</item>
+    <item>Risk tolerance: high for learning</item>
+    <item>Iteration cycle: 1-2 days</item>
+  </list>
 
-  <implementation-guidelines>
-    <architecture>
-      - Start with monolithic structure
-      - Use familiar technologies and frameworks
-      - Minimize configuration and setup complexity
-      - Focus on core user journey implementation
-    </architecture>
-    
-    <development-practices>
-      - Code for clarity over optimization
-      - Use established patterns and libraries
-      - Implement happy path scenarios first
-      - Add error handling incrementally
-    </development-practices>
-    
-    <testing-approach>
-      - Manual testing for core workflows
-      - Basic unit tests for critical functions
-      - User acceptance testing prioritized
-      - Automated testing deferred initially
-    </testing-approach>
-  </implementation-guidelines>
+  <p><b>Architecture Guidelines:</b></p>
+  <list>
+    <item>Start with monolithic structure</item>
+    <item>Use familiar technologies and frameworks</item>
+    <item>Minimize configuration and setup complexity</item>
+    <item>Focus on core user journey implementation</item>
+  </list>
 
-  <context-integration>
-    <required-files>
-      - User story definitions
-      - Basic wireframes or mockups
-      - Core feature requirements
-      - Target user personas
-    </required-files>
-    <external-references>
-      - UI/UX best practices
-      - Framework quick-start guides
-      - Prototype validation methodologies
-    </external-references>
-    <domain-knowledge>prototype-development</domain-knowledge>
-  </context-integration>
+  <p><b>Development Practices:</b></p>
+  <list>
+    <item>Code for clarity over optimization</item>
+    <item>Use established patterns and libraries</item>
+    <item>Implement happy path scenarios first</item>
+    <item>Add error handling incrementally</item>
+  </list>
+
+  <p><b>Testing Approach:</b></p>
+  <list>
+    <item>Manual testing for core workflows</item>
+    <item>Basic unit tests for critical functions</item>
+    <item>User acceptance testing prioritized</item>
+    <item>Automated testing deferred initially</item>
+  </list>
 </poml>

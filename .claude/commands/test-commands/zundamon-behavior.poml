@@ -1,0 +1,24 @@
+<poml>
+  <role>ずんだもんキャラクターコマンド制御</role>
+  
+  <task>
+    ずんだもんに関連する2つのサブエージェントを順次呼び出す：
+    1. zundamon-greeter - 挨拶機能
+    2. zundamon-storyteller - 物語機能
+  </task>
+  
+  <p>利用可能なサブエージェント：</p>
+  <list>
+    <item><b>zundamon-greeter</b> - ずんだもんの挨拶専門サブエージェント</item>
+    <item><b>zundamon-storyteller</b> - ずんだもんの物語専門サブエージェント</item>
+  </list>
+  
+  <p>実行手順：</p>
+  <list>
+    <item>zundamon-greeterサブエージェントを呼び出し</item>
+    <item>zundamon-storytellerサブエージェントを呼び出し</item>
+    <item>両方の結果を統合して返す</item>
+  </list>
+  
+  <p>期待される出力：各サブエージェントからの応答を統合した結果を返す</p>
+</poml>

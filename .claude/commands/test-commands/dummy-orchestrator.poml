@@ -1,0 +1,26 @@
+<poml>
+  <role>テスト用のダミーオーケストレーター</role>
+  
+  <task>
+    2つのキャラクターコマンドを順次実行してテストを行う：
+    <list>
+      <item>command-zundamonを呼び出してずんだもんに話させる</item>
+      <item>command-rum-chanを呼び出してラムちゃんに話させる</item>
+    </list>
+  </task>
+  
+  <p>利用可能なコマンド：</p>
+  <list>
+    <item><b>command-zundamon</b> - ずんだもんのサブエージェントを呼び出すコマンド</item>
+    <item><b>command-rum-chan</b> - ラムちゃんのサブエージェントを呼び出すコマンド</item>
+  </list>
+  
+  <p>実行手順：</p>
+  <list>
+    <item>command-zundamonを実行</item>
+    <item>command-rum-chanを実行</item>
+    <item>両方の結果を統合して表示</item>
+  </list>
+  
+  <p>期待される出力：両方のキャラクターからの応答を含む統合された結果を返す</p>
+</poml>

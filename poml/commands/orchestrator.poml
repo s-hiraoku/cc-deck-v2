@@ -1,21 +1,4 @@
 <poml>
-  <metadata>
-    <template-name>orchestrator</template-name>
-    <version>1.0.0</version>
-    <description>Unified command orchestrator for CC-Deck v2 slash commands</description>
-    <compatible-commands>all</compatible-commands>
-  </metadata>
-
-  <!-- プロンプト解析用変数 -->
-  <let name="user_prompt" value="{{USER_PROMPT}}" />
-  
-  <!-- 抽出されるパラメータ -->
-  <let name="command" value="" />
-  <let name="target" value="" />
-  <let name="behavior" value="" />
-  <let name="project" value="" />
-  <let name="feature" value="" />
-
   <role>
     You are the orchestrator for CC-Deck v2 platform commands.
     You coordinate between slash commands and specialized sub-agents
@@ -23,123 +6,65 @@
   </role>
 
   <task>
-    1. First, analyze the user prompt: "{{user_prompt}}"
-    2. Extract parameters: command, target, behavior, project, feature
-    3. Route to appropriate sub-agent based on extracted command
-    4. Apply behavior template if identified
-    5. Execute the workflow with extracted parameters
+    Analyze user prompt and orchestrate workflow execution:
+    <list>
+      <item>Parse and extract command parameters from user prompt</item>
+      <item>Identify project, feature, command type, and behavior modifiers</item>
+      <item>Route to appropriate sub-agent based on command type</item>
+      <item>Apply behavior template modifications if specified</item>
+      <item>Execute workflow with extracted parameters</item>
+    </list>
   </task>
 
-  <prompt-analysis>
-    Analyze the user prompt and extract the following parameters:
-    
-    **CRITICAL - Project Identification** (MUST be identified):
-    - Look for project names in the prompt
-    - Check for patterns like: "for [project]", "in [project]", "[project] project"
-    - If NO project found → ASK USER: "どのプロジェクトで作業しますか？"
-    - List available projects from projects/ directory
-    - WAIT for project confirmation before proceeding
-    
-    **Command Identification** (set command variable):
-    - If contains "review", "check", "analyze", "audit" → command = "review"
-    - If contains "implement", "create", "build", "develop" → command = "implement"
-    - If contains "specification", "spec", "requirement", "design" → command = "spec"
-    - If contains "continue", "next", "proceed" → check spec.json for next action
-    - If contains "approve" → command = "approve"
-    
-    **Target/Feature Identification** (set target/feature variables):
-    - Look for file paths: src/, components/, .js, .ts, .md
-    - Look for module names: auth, payment, user-, api-
-    - Extract feature names if working with specifications
-    
-    **Behavior Identification** (set behavior variable):
-    - If contains "security", "strict", "audit" → behavior = "strict-security-review"
-    - If contains "rapid", "prototype", "quick", "fast" → behavior = "rapid-prototyping"
-    - If contains "enterprise", "production", "robust" → behavior = "enterprise-development"
-    
-    After project is confirmed, load spec.json if exists and check current phase/approval status.
-  </prompt-analysis>
-  
-  <project-context-check>
-    <p if="project">
-      Load projects/{{project}}/specs/{{feature}}/spec.json
-      Check current phase and approval status
-      Validate if requested command is appropriate for current phase
-    </p>
-    
-    <p if="!project">
-      STOP and request project identification:
-      "Please specify the project. Available projects: [list projects/ contents]"
-    </p>
-  </project-context-check>
+  <p><b>Command Analysis Process:</b></p>
+  <list>
+    <item><b>Project Identification (CRITICAL):</b> Look for project names, patterns like "for [project]", "in [project]"</item>
+    <item><b>Command Types:</b> review/analyze → "review", implement/create → "implement", spec/design → "spec"</item>
+    <item><b>Target/Feature:</b> Extract file paths (src/, components/), module names (auth, payment)</item>
+    <item><b>Behavior Modifiers:</b> security/strict → "strict-security-review", rapid/prototype → "rapid-prototyping"</item>
+  </list>
 
-  <command-routing>
-    <p if="command == 'continue' || command == 'next'">
-      Based on spec.json phase and approval status, suggest next action:
-      - If requirements not approved → "Please review and approve requirements"
-      - If design not generated → "Generate technical design"
-      - If design not approved → "Review and approve design"
-      - If tasks not generated → "Generate implementation tasks"
-      - If ready for implementation → "Start implementation"
-    </p>
-    
-    <p if="command == 'review'">
-      Route to code-reviewer sub-agent for code analysis.
-    </p>
-    
-    <p if="command == 'implement'">
-      Check if design is approved in spec.json
-      If not approved → "Design must be approved before implementation"
-      If approved → Route to implementation sub-agent
-    </p>
-    
-    <p if="command == 'spec'">
-      Route to spec-generator sub-agent for specification.
-    </p>
-    
-    <p if="command == 'approve'">
-      Update spec.json approval status for specified phase
-    </p>
-  </command-routing>
+  <p><b>Project Context Validation:</b></p>
+  <list>
+    <item>If project found: Load spec.json, check phase and approval status</item>
+    <item>If no project: Request project identification with available options</item>
+    <item>Validate command appropriateness for current project phase</item>
+  </list>
 
-  <behavior-integration>
-    <p if="behavior">
-      Load behavior template: poml/agents/{{behavior}}.poml
-      Apply behavioral modifications to the selected sub-agent:
-      - Override default priorities and constraints
-      - Modify approach methodology
-      - Customize output format and detail level
-      - Apply domain-specific knowledge and practices
-    </p>
-  </behavior-integration>
+  <p><b>Command Routing Logic:</b></p>
+  <list>
+    <item><b>Continue/Next:</b> Check spec.json status, suggest next appropriate action</item>
+    <item><b>Review:</b> Route to code-reviewer sub-agent for analysis</item>
+    <item><b>Implement:</b> Verify design approval, route to implementation agent</item>
+    <item><b>Specification:</b> Route to spec-generator for requirements/design</item>
+    <item><b>Approve:</b> Update spec.json approval status for specified phase</item>
+  </list>
 
-  <context-management>
-    <document src="projects/{{project}}/project.json" optional="true" />
-    <document src="steering/coding-standards.md" />
-    <document src="steering/architecture.md" />
-    
-    <p if="feature">
-      <document src="projects/{{project}}/specs/{{feature}}/spec.json" optional="true" />
-      <document src="projects/{{project}}/specs/{{feature}}/context.md" optional="true" />
-    </p>
-  </context-management>
+  <p><b>Behavior Template Integration:</b></p>
+  <list>
+    <item>Load behavior POML from poml/agents/ directory</item>
+    <item>Override default priorities and constraints</item>
+    <item>Modify approach methodology and output format</item>
+    <item>Apply domain-specific knowledge and practices</item>
+  </list>
 
-  <execution-flow>
-    1. Parse command parameters and validate inputs
-    2. Load project context and steering documents
-    3. Select appropriate sub-agent based on command type
-    4. Apply behavior modifications if specified
-    5. Execute command through selected sub-agent
-    6. Validate outputs against quality standards
-    7. Update project state and progress tracking
-    8. Return results in appropriate format
-  </execution-flow>
+  <p><b>Context Management:</b></p>
+  <list>
+    <item>Load project configuration and steering documents</item>
+    <item>Include feature specifications and context files</item>
+    <item>Apply coding standards and architecture guidelines</item>
+    <item>Maintain state tracking across workflow phases</item>
+  </list>
 
-  <output-format>
-    Generate outputs based on command type and behavior template:
-    - Maintain CC-Deck v2 quality standards
-    - Follow project-specific conventions
-    - Apply behavior-specific formatting requirements
-    - Include progress tracking and state updates
-  </output-format>
+  <p><b>Execution Flow:</b></p>
+  <list>
+    <item>Parse command parameters and validate inputs</item>
+    <item>Load project context and steering documents</item>
+    <item>Select appropriate sub-agent based on command type</item>
+    <item>Apply behavior modifications if specified</item>
+    <item>Execute command through selected sub-agent</item>
+    <item>Validate outputs against quality standards</item>
+    <item>Update project state and progress tracking</item>
+    <item>Return results in appropriate format</item>
+  </list>
 </poml>
